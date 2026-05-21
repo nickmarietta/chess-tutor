@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chess Tutor
 
-## Getting Started
+AI-guided chess analysis: import games, review positions on a board, reflect on your thinking, and get coaching feedback.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Tailwind CSS 4
+- Supabase (Postgres)
+- chess.js + react-chessboard
+
+## Getting started
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Supabase
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run the SQL in `supabase/migrations/20240520000000_initial.sql` in the SQL editor (or use `supabase db push` with the CLI).
+3. Copy `.env.local.example` to `.env.local` and add your project URL and anon key.
+
+### 3. Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/import` | PGN paste + Chess.com PubAPI import |
+| `/games` | Imported games list |
+| `/games/[gameId]` | Review board, moves, reflections, coaching |
 
-## Learn More
+## API
 
-To learn more about Next.js, take a look at the following resources:
+- `POST /api/games` — parse PGN, store game + positions
+- `GET /api/games` — list games
+- `GET /api/games/[gameId]` — game detail
+- `POST /api/coach` — save reflection + placeholder coach response
+- `GET /api/chesscom/archives?username=` — Chess.com archive URLs
+- `GET /api/chesscom/games?archiveUrl=` — games for a month
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Coaching (v1)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Coaching uses `lib/coach/generateResponse.ts` — replace with an LLM call when ready. Hint mode avoids naming the best move.
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploy to Vercel (or similar). Set the same Supabase env vars in the hosting dashboard.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Out of scope (v1)
+
+- Live multiplayer / human coaching
+- Voice input
+- Lichess integration
+- Chess.com scraping (PubAPI only)
