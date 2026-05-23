@@ -21,7 +21,9 @@ npm install
 ### 2. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run the SQL in `supabase/migrations/20240520000000_initial.sql` in the SQL editor (or use `supabase db push` with the CLI).
+2. Run both SQL files in the SQL editor (in order):
+   - `supabase/migrations/20240520000000_initial.sql`
+   - `supabase/migrations/20240520100000_game_user_color.sql`
 3. Copy `.env.local.example` to `.env.local` and add your project URL and anon key.
 
 ### 3. Run locally
@@ -50,9 +52,27 @@ Open [http://localhost:3000](http://localhost:3000).
 - `GET /api/chesscom/archives?username=` — Chess.com archive URLs
 - `GET /api/chesscom/games?archiveUrl=` — games for a month
 
-## Coaching (v1)
+## Coaching
 
-Coaching uses `lib/coach/generateResponse.ts` — replace with an LLM call when ready. Hint mode avoids naming the best move.
+Prompt content lives in **`lib/coach/prompt.ts`** (provider-neutral). Model transport lives in **`lib/coach/providers/`**.
+
+```env
+COACH_PROVIDER=ollama              # or openrouter | gemini | mock
+COACH_MODEL=llama3.2                 # must match a model you've pulled locally
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+```
+
+**Local setup:** install [Ollama](https://ollama.com), run `ollama serve`, then `ollama pull llama3.2` (or whatever you set in `COACH_MODEL`). Use `ollama list` to see available models.
+
+To add another provider: implement `CoachProvider` in a new file under `providers/`, add a case in `providers/index.ts`. Do not change `prompt.ts`.
+
+Hint mode rules are enforced in the system prompt — not in provider code.
+
+### Explain move (v1)
+
+- `POST /api/explain` — structured explanation + board annotations
+- Annotations (squares, arrows, variation) are built from **chess.js + game positions**, not LLM output
+- Mock engine in `lib/engine/mockEngine.ts` — swap for Stockfish later
 
 ## Deploy
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateCoachResponse } from "@/lib/coach/generateResponse";
+import { getGameById } from "@/lib/supabase/games";
 import { createServerClient } from "@/lib/supabase/server";
 import type { HelpMode } from "@/types";
 
@@ -32,13 +33,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid help mode." }, { status: 400 });
     }
 
-    const coachResponse = generateCoachResponse(userText ?? "", helpMode, {
-      fen: body.fen ?? "",
-      moveSan: body.moveSan ?? null,
-      ply: body.ply ?? 0,
-      whitePlayer: body.whitePlayer ?? null,
-      blackPlayer: body.blackPlayer ?? null,
-    });
+    const gameData = await getGameById(gameId);
+    if (!gameData) {
+      return NextResponse.json({ error: "Game not found." }, { status: 404 });
+    }
+
+    const currentPosition = gameData.positions.find((p) => p.id === positionId);
+    if (!currentPosition) {
+      return NextResponse.json({ error: "Position not found." }, { status: 404 });
+    }
+
+    const positions = gameData.positions.map((p) => ({
+      ply: p.ply,
+      move_san: p.move_san,
+    }));
+
+    const coachResponse = await generateCoachResponse(
+      userText ?? "",
+      helpMode,
+      {
+        fen: currentPosition.fen,
+        moveSan: currentPosition.move_san,
+        ply: currentPosition.ply,
+        whitePlayer: gameData.game.white_player,
+        blackPlayer: gameData.game.black_player,
+        playerUsername: gameData.game.player_username,
+        userColor: gameData.game.user_color,
+      },
+      positions,
+    );
 
     const supabase = createServerClient();
     const { data: reflection, error } = await supabase

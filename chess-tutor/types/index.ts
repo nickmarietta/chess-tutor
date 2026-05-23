@@ -2,6 +2,8 @@ export type GameSource = "pgn_paste" | "chess_com";
 
 export type HelpMode = "hint" | "guide" | "answer";
 
+export type UserColor = "white" | "black";
+
 export type ParsedPosition = {
   ply: number;
   fen: string;
@@ -22,6 +24,8 @@ export type Game = {
   source_game_id: string | null;
   white_player: string | null;
   black_player: string | null;
+  player_username: string | null;
+  user_color: UserColor | null;
   result: string | null;
   played_at: string | null;
   raw_pgn: string;
@@ -57,3 +61,15 @@ export type ChessComArchiveGame = {
   black: { username: string; rating?: number };
   result: string;
 };
+
+export type {
+  ArrowType,
+  BoardAnnotations,
+  BoardArrow,
+  BoardHighlight,
+  EngineContext,
+  ExplainRequest,
+  ExplainResponse,
+  HighlightType,
+  VariationMove,
+} from "./annotations";

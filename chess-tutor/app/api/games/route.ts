@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { parsePgn } from "@/lib/chess/parsePgn";
+import { resolveUserColor } from "@/lib/chess/resolveUserColor";
 import { createGameWithPositions, listGames } from "@/lib/supabase/games";
-import type { GameSource } from "@/types";
+import type { GameSource, UserColor } from "@/types";
 
 export async function GET() {
   try {
@@ -19,6 +20,8 @@ export async function POST(request: Request) {
       pgn?: string;
       source?: GameSource;
       sourceGameId?: string;
+      playerUsername?: string;
+      userColor?: UserColor;
     };
 
     const pgn = body.pgn?.trim();
@@ -28,12 +31,23 @@ export async function POST(request: Request) {
 
     const metadata = parsePgn(pgn);
     const source: GameSource = body.source ?? "pgn_paste";
+    const playerUsername = body.playerUsername?.trim() || null;
+
+    const userColor =
+      body.userColor ??
+      resolveUserColor(
+        metadata.whitePlayer,
+        metadata.blackPlayer,
+        playerUsername,
+      );
 
     const { game } = await createGameWithPositions({
       rawPgn: pgn,
       source,
       sourceGameId: body.sourceGameId ?? null,
       metadata,
+      playerUsername,
+      userColor,
     });
 
     return NextResponse.json({ game }, { status: 201 });

@@ -34,6 +34,11 @@ export function GameCard({ game }: GameCardProps) {
       </div>
       <p className="mt-1 text-sm text-stone-500">
         {game.result ?? "—"} · {formatDate(game.played_at ?? game.created_at)}
+        {game.user_color && (
+          <span className="ml-2 text-amber-700">
+            · You: {game.user_color === "white" ? "White" : "Black"}
+          </span>
+        )}
       </p>
     </Link>
   );

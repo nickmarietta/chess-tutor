@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PlayerUsernameField } from "./PlayerUsernameField";
 
 export function PgnPasteForm() {
   const router = useRouter();
   const [pgn, setPgn] = useState("");
+  const [playerUsername, setPlayerUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +20,11 @@ export function PgnPasteForm() {
       const res = await fetch("/api/games", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pgn, source: "pgn_paste" }),
+        body: JSON.stringify({
+          pgn,
+          source: "pgn_paste",
+          playerUsername: playerUsername.trim() || undefined,
+        }),
       });
 
       const data = await res.json();
@@ -34,6 +40,12 @@ export function PgnPasteForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <PlayerUsernameField
+        id="pgn-username"
+        value={playerUsername}
+        onChange={setPlayerUsername}
+        hint="Must match the White or Black name in the PGN headers."
+      />
       <div>
         <label htmlFor="pgn" className="text-sm font-medium text-stone-700">
           Paste PGN

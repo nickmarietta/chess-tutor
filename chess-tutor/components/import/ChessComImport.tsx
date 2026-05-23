@@ -69,6 +69,7 @@ export function ChessComImport() {
           pgn: game.pgn,
           source: "chess_com",
           sourceGameId: extractGameIdFromUrl(game.url),
+          playerUsername: username.trim(),
         }),
       });
 

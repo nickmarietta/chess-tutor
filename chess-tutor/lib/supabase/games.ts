@@ -1,4 +1,4 @@
-import type { GameSource, ParsedGameMetadata } from "@/types";
+import type { GameSource, ParsedGameMetadata, UserColor } from "@/types";
 import { createServerClient } from "./server";
 
 export type CreateGameInput = {
@@ -6,25 +6,58 @@ export type CreateGameInput = {
   source: GameSource;
   sourceGameId?: string | null;
   metadata: ParsedGameMetadata;
+  playerUsername?: string | null;
+  userColor?: UserColor | null;
 };
+
+const SCHEMA_MIGRATION_HINT =
+  "Run supabase/migrations/20240520100000_game_user_color.sql in the Supabase SQL editor.";
+
+function isMissingUserColorColumns(message: string | undefined): boolean {
+  if (!message) return false;
+  return (
+    message.includes("player_username") ||
+    message.includes("user_color") ||
+    message.includes("schema cache")
+  );
+}
 
 export async function createGameWithPositions(input: CreateGameInput) {
   const supabase = createServerClient();
   const { metadata, rawPgn, source, sourceGameId } = input;
 
-  const { data: game, error: gameError } = await supabase
+  const baseRow = {
+    source,
+    source_game_id: sourceGameId ?? null,
+    white_player: metadata.whitePlayer,
+    black_player: metadata.blackPlayer,
+    result: metadata.result,
+    played_at: metadata.playedAt,
+    raw_pgn: rawPgn,
+  };
+
+  const fullRow = {
+    ...baseRow,
+    player_username: input.playerUsername ?? null,
+    user_color: input.userColor ?? null,
+  };
+
+  let { data: game, error: gameError } = await supabase
     .from("games")
-    .insert({
-      source,
-      source_game_id: sourceGameId ?? null,
-      white_player: metadata.whitePlayer,
-      black_player: metadata.blackPlayer,
-      result: metadata.result,
-      played_at: metadata.playedAt,
-      raw_pgn: rawPgn,
-    })
+    .insert(fullRow)
     .select()
     .single();
+
+  if (gameError && isMissingUserColorColumns(gameError.message)) {
+    console.warn(
+      `games.user_color columns missing — ${SCHEMA_MIGRATION_HINT}`,
+    );
+    ({ data: game, error: gameError } = await supabase
+      .from("games")
+      .insert(baseRow)
+      .select()
+      .single());
+  }
 
   if (gameError || !game) {
     throw new Error(gameError?.message ?? "Failed to save game.");
@@ -83,7 +116,7 @@ export async function getGameById(gameId: string) {
     .from("reflections")
     .select("*")
     .eq("game_id", gameId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (reflectionsError) throw new Error(reflectionsError.message);
 
@@ -92,4 +125,30 @@ export async function getGameById(gameId: string) {
     positions: positions ?? [],
     reflections: reflections ?? [],
   };
+}
+
+export async function updateGameUserColor(
+  gameId: string,
+  userColor: UserColor,
+  playerUsername?: string | null,
+) {
+  const supabase = createServerClient();
+  let { data, error } = await supabase
+    .from("games")
+    .update({
+      user_color: userColor,
+      ...(playerUsername !== undefined ? { player_username: playerUsername } : {}),
+    })
+    .eq("id", gameId)
+    .select()
+    .single();
+
+  if (error && isMissingUserColorColumns(error.message)) {
+    throw new Error(
+      `Cannot save your color yet. ${SCHEMA_MIGRATION_HINT}`,
+    );
+  }
+
+  if (error) throw new Error(error.message);
+  return data;
 }

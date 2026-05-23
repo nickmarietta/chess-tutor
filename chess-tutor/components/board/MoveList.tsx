@@ -6,9 +6,15 @@ type MoveListProps = {
   positions: Position[];
   selectedPly: number;
   onSelectPly: (ply: number) => void;
+  highlightedPlies?: Set<number>;
 };
 
-export function MoveList({ positions, selectedPly, onSelectPly }: MoveListProps) {
+export function MoveList({
+  positions,
+  selectedPly,
+  onSelectPly,
+  highlightedPlies,
+}: MoveListProps) {
   const moves = positions.filter((p) => p.move_san);
 
   return (
@@ -23,8 +29,9 @@ export function MoveList({ positions, selectedPly, onSelectPly }: MoveListProps)
         }`}
       >
         Start position
+        {highlightedPlies?.has(0) && <ReflectionDot />}
       </button>
-      <div className="max-h-64 overflow-y-auto rounded-lg border border-stone-200 bg-stone-50 p-2">
+      <div className="max-h-[min(24rem,calc(100vh-20rem))] overflow-y-auto rounded-lg border border-stone-200 bg-stone-50 p-2">
         <div className="grid grid-cols-[auto_1fr_1fr] gap-x-2 gap-y-1 text-sm">
           {Array.from({ length: Math.ceil(moves.length / 2) }, (_, i) => {
             const moveNumber = i + 1;
@@ -40,6 +47,7 @@ export function MoveList({ positions, selectedPly, onSelectPly }: MoveListProps)
                     ply={white.ply}
                     selectedPly={selectedPly}
                     onSelect={onSelectPly}
+                    hasReflection={highlightedPlies?.has(white.ply)}
                   />
                 ) : (
                   <span />
@@ -50,6 +58,7 @@ export function MoveList({ positions, selectedPly, onSelectPly }: MoveListProps)
                     ply={black.ply}
                     selectedPly={selectedPly}
                     onSelect={onSelectPly}
+                    hasReflection={highlightedPlies?.has(black.ply)}
                   />
                 ) : (
                   <span />
@@ -63,16 +72,24 @@ export function MoveList({ positions, selectedPly, onSelectPly }: MoveListProps)
   );
 }
 
+function ReflectionDot() {
+  return (
+    <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
+  );
+}
+
 function MoveButton({
   label,
   ply,
   selectedPly,
   onSelect,
+  hasReflection,
 }: {
   label: string;
   ply: number;
   selectedPly: number;
   onSelect: (ply: number) => void;
+  hasReflection?: boolean;
 }) {
   return (
     <button
@@ -85,6 +102,7 @@ function MoveButton({
       }`}
     >
       {label}
+      {hasReflection && <ReflectionDot />}
     </button>
   );
 }
