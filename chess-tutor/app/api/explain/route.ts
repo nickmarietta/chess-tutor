@@ -10,11 +10,8 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ExplainRequest;
 
-    if (!body.gameId || !body.positionId) {
-      return NextResponse.json(
-        { error: "gameId and positionId are required." },
-        { status: 400 },
-      );
+    if (!body.gameId) {
+      return NextResponse.json({ error: "gameId is required." }, { status: 400 });
     }
 
     const helpMode = body.helpMode ?? "guide";
@@ -27,28 +24,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Game not found." }, { status: 404 });
     }
 
-    const currentPosition = gameData.positions.find(
-      (p) => p.id === body.positionId,
-    );
-    if (!currentPosition) {
-      return NextResponse.json({ error: "Position not found." }, { status: 404 });
+    const dbPosition = body.positionId
+      ? gameData.positions.find((p) => p.id === body.positionId)
+      : null;
+
+    const fen = body.fen ?? dbPosition?.fen;
+    if (!fen) {
+      return NextResponse.json(
+        { error: "fen or valid positionId is required." },
+        { status: 400 },
+      );
     }
 
-    const parentPosition =
-      currentPosition.ply > 0
-        ? gameData.positions.find((p) => p.ply === currentPosition.ply - 1)
+    const parentFromDb =
+      dbPosition && dbPosition.ply > 0
+        ? gameData.positions.find((p) => p.ply === dbPosition.ply - 1)
         : null;
 
-    const reflectionForPosition = gameData.reflections.find(
-      (r) => r.position_id === currentPosition.id,
-    );
+    const fenBefore =
+      body.fenBefore !== undefined
+        ? body.fenBefore
+        : (parentFromDb?.fen ?? null);
+
+    const reflectionForPosition = dbPosition
+      ? gameData.reflections.find((r) => r.position_id === dbPosition.id)
+      : undefined;
 
     const result = await generateExplain({
-      fen: currentPosition.fen,
-      fenBefore: parentPosition?.fen ?? null,
-      ply: currentPosition.ply,
-      selectedMoveSan:
-        body.selectedMoveSan ?? currentPosition.move_san,
+      fen,
+      fenBefore,
+      ply: body.ply ?? dbPosition?.ply ?? 0,
+      selectedMoveSan: body.selectedMoveSan ?? dbPosition?.move_san ?? null,
       userColor: gameData.game.user_color,
       helpMode,
       userReflection: body.userReflection ?? reflectionForPosition?.user_text,
@@ -58,6 +64,8 @@ export async function POST(request: Request) {
         move_san: p.move_san,
         fen: p.fen,
       })),
+      analysisMoves: body.analysisMoves,
+      isAnalysis: body.isAnalysis ?? false,
     });
 
     return NextResponse.json(result);

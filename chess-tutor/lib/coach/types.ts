@@ -9,14 +9,18 @@ export type CoachContext = {
   blackPlayer: string | null;
   playerUsername: string | null;
   userColor: UserColor | null;
+  isAnalysis?: boolean;
+  analysisMoves?: string[];
 };
 
 export type CoachInput = {
   userText: string;
   helpMode: HelpMode;
   context: CoachContext;
-  /** Positions up to current ply — used to build move history for the model. */
+  /** Game move history up to anchor — used to build move history for the model. */
   positions: MoveHistoryEntry[];
+  /** Analysis line SAN moves when exploring variations. */
+  analysisMoves?: string[];
 };
 
 /** Provider-neutral prompt — every model receives the same content. */

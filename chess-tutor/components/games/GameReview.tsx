@@ -2,16 +2,17 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { AnalysisBoard } from "@/components/board/AnalysisBoard";
+import { AnalysisLineMoves } from "@/components/board/AnalysisLineMoves";
 import { MoveList } from "@/components/board/MoveList";
 import { VariationPreview } from "@/components/board/VariationPreview";
-import {
-  CoachChatLog,
-  type ReflectionEntry,
-} from "@/components/coach/CoachChatLog";
+import { CoachChatLog } from "@/components/coach/CoachChatLog";
 import { ExplainMovePanel } from "@/components/coach/ExplainMovePanel";
 import { ReflectionPanel } from "@/components/coach/ReflectionPanel";
 import { UserColorBadge } from "@/components/games/UserColorBadge";
+import { useAnalysisSession } from "@/hooks/useAnalysisSession";
+import { formatMoveContext } from "@/components/coach/CoachChatLog";
 import { getMockEngineContext } from "@/lib/engine/mockEngine";
+import type { ChatEntry } from "@/types/coach";
 import type { ExplainResponse } from "@/types/annotations";
 import type { Game, Position, Reflection, UserColor } from "@/types";
 
@@ -24,21 +25,28 @@ type GameReviewProps = {
 function enrichReflections(
   reflections: Reflection[],
   positions: Position[],
-): ReflectionEntry[] {
+): ChatEntry[] {
   const byId = new Map(positions.map((p) => [p.id, p]));
-  return reflections
-    .map((r) => {
-      const pos = byId.get(r.position_id);
-      if (!pos) return null;
-      return { ...r, ply: pos.ply, moveSan: pos.move_san };
-    })
-    .filter((r): r is ReflectionEntry => r !== null);
+  const entries: ChatEntry[] = [];
+  for (const r of reflections) {
+    const pos = byId.get(r.position_id);
+    if (!pos) continue;
+    entries.push({
+      ...r,
+      ply: pos.ply,
+      moveSan: pos.move_san,
+      label: formatMoveContext(pos.ply, pos.move_san),
+      isAnalysis: false,
+      anchorPly: pos.ply,
+      lineCursor: 0,
+    });
+  }
+  return entries;
 }
 
 export function GameReview({ game, positions, reflections }: GameReviewProps) {
-  const [selectedPly, setSelectedPly] = useState(0);
   const [gameState, setGameState] = useState(game);
-  const [chatEntries, setChatEntries] = useState<ReflectionEntry[]>(() =>
+  const [chatEntries, setChatEntries] = useState<ChatEntry[]>(() =>
     enrichReflections(reflections, positions),
   );
   const [explainResult, setExplainResult] = useState<ExplainResponse | null>(
@@ -46,34 +54,37 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
   );
   const [variationPreviewIndex, setVariationPreviewIndex] = useState(-1);
 
-  const currentPosition = useMemo(
-    () => positions.find((p) => p.ply === selectedPly) ?? positions[0],
-    [positions, selectedPly],
-  );
+  const {
+    anchorPly,
+    viewState,
+    goToGamePly,
+    makeMove,
+    stepBack,
+    stepForward,
+    resetToGame,
+    goToLineIndex,
+    restoreSnapshot,
+  } = useAnalysisSession(positions);
 
-  const parentPosition = useMemo(
-    () =>
-      currentPosition && currentPosition.ply > 0
-        ? positions.find((p) => p.ply === currentPosition.ply - 1)
-        : null,
-    [positions, currentPosition],
+  const coachContext = useMemo(
+    () => ({ game: gameState, view: viewState }),
+    [gameState, viewState],
   );
 
   const pliesWithReflections = useMemo(
-    () => new Set(chatEntries.map((e) => e.ply)),
+    () => new Set(chatEntries.filter((e) => !e.isAnalysis).map((e) => e.ply)),
     [chatEntries],
   );
 
   const boardOrientation = gameState.user_color ?? "white";
 
   const mockEngine = useMemo(() => {
-    if (!currentPosition) return null;
     return getMockEngineContext(
       positions,
-      currentPosition.ply,
-      parentPosition?.fen ?? null,
+      viewState.ply,
+      viewState.fenBefore,
     );
-  }, [positions, currentPosition, parentPosition]);
+  }, [positions, viewState.ply, viewState.fenBefore]);
 
   const boardFen = useMemo(() => {
     if (
@@ -82,8 +93,8 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
     ) {
       return explainResult.variation[variationPreviewIndex].fenAfter;
     }
-    return currentPosition?.fen ?? "";
-  }, [variationPreviewIndex, explainResult, currentPosition]);
+    return viewState.fen;
+  }, [variationPreviewIndex, explainResult, viewState.fen]);
 
   const boardAnnotations =
     explainResult && variationPreviewIndex === -1
@@ -93,34 +104,48 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
         }
       : null;
 
-  const handleReflectionAdded = useCallback(
-    (reflection: Reflection) => {
-      if (!currentPosition) return;
-      setChatEntries((prev) => [
-        ...prev,
-        {
-          ...reflection,
-          ply: currentPosition.ply,
-          moveSan: currentPosition.move_san,
-        },
-      ]);
-    },
-    [currentPosition],
-  );
-
-  const handleSelectPly = useCallback((ply: number) => {
-    setSelectedPly(ply);
+  const clearBoardExtras = useCallback(() => {
     setExplainResult(null);
     setVariationPreviewIndex(-1);
   }, []);
+
+  const handleSelectGamePly = useCallback(
+    (ply: number) => {
+      goToGamePly(ply);
+      clearBoardExtras();
+    },
+    [goToGamePly, clearBoardExtras],
+  );
+
+  const handleBoardMove = useCallback(
+    (from: string, to: string) => {
+      const ok = makeMove(from, to);
+      if (ok) clearBoardExtras();
+      return ok;
+    },
+    [makeMove, clearBoardExtras],
+  );
+
+  const handleEntryAdded = useCallback((entry: ChatEntry) => {
+    setChatEntries((prev) => [...prev, entry]);
+  }, []);
+
+  const handleSelectChatEntry = useCallback(
+    (entry: ChatEntry) => {
+      if (entry.anchorPly !== undefined) {
+        restoreSnapshot(
+          entry.anchorPly,
+          entry.lineCursor ?? 0,
+          entry.analysisMoves ?? [],
+        );
+        clearBoardExtras();
+      }
+    },
+    [restoreSnapshot, clearBoardExtras],
+  );
 
   const handleExplainResult = useCallback((result: ExplainResponse) => {
     setExplainResult(result);
-    setVariationPreviewIndex(-1);
-  }, []);
-
-  const handleClearAnnotations = useCallback(() => {
-    setExplainResult(null);
     setVariationPreviewIndex(-1);
   }, []);
 
@@ -136,13 +161,8 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
     }
   }
 
-  if (!currentPosition) {
-    return <p className="text-stone-600">No positions found for this game.</p>;
-  }
-
-  const moveLabel = currentPosition.move_san
-    ? `After ${currentPosition.move_san}`
-    : "Starting position";
+  const showAnalysisLine =
+    viewState.isAnalysis || viewState.line.nodes.length > 1;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
@@ -151,7 +171,20 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
           fen={boardFen}
           orientation={boardOrientation}
           annotations={boardAnnotations}
+          interactive
+          onMove={handleBoardMove}
         />
+
+        <p className="text-xs text-stone-500">
+          Drag pieces to try moves · analysis mode
+        </p>
+
+        {showAnalysisLine && (
+          <AnalysisLineMoves
+            line={viewState.line}
+            onSelectIndex={goToLineIndex}
+          />
+        )}
 
         {explainResult && explainResult.variation.length > 0 && (
           <VariationPreview
@@ -161,34 +194,50 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
           />
         )}
 
-        <p className="text-sm text-stone-500">
-          Ply {currentPosition.ply} · {moveLabel}
+        <p className="text-sm text-stone-600">
+          {viewState.label}
+          {viewState.isAnalysis && (
+            <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
+              Analysis
+            </span>
+          )}
         </p>
 
         <ExplainMovePanel
-          game={gameState}
-          position={currentPosition}
+          coachContext={coachContext}
           onExplainResult={handleExplainResult}
-          onClear={handleClearAnnotations}
+          onClear={clearBoardExtras}
           hasAnnotations={!!explainResult}
           engineBestMove={mockEngine?.bestMoveSan ?? null}
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <NavButton
-            label="← Prev"
-            disabled={selectedPly <= 0}
-            onClick={() => handleSelectPly(Math.max(0, selectedPly - 1))}
+            label="← Back"
+            disabled={!viewState.canStepBack}
+            onClick={() => {
+              stepBack();
+              clearBoardExtras();
+            }}
           />
           <NavButton
-            label="Next →"
-            disabled={selectedPly >= positions.length - 1}
-            onClick={() =>
-              handleSelectPly(
-                Math.min(positions.length - 1, selectedPly + 1),
-              )
-            }
+            label="Forward →"
+            disabled={!viewState.canStepForward}
+            onClick={() => {
+              stepForward();
+              clearBoardExtras();
+            }}
           />
+          {showAnalysisLine && (
+            <NavButton
+              label="Back to game"
+              disabled={false}
+              onClick={() => {
+                resetToGame();
+                clearBoardExtras();
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -209,8 +258,8 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
 
         <MoveList
           positions={positions}
-          selectedPly={selectedPly}
-          onSelectPly={handleSelectPly}
+          selectedPly={anchorPly}
+          onSelectPly={handleSelectGamePly}
           highlightedPlies={pliesWithReflections}
         />
       </div>
@@ -218,13 +267,12 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
       <div className="flex max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border border-stone-200 bg-stone-50 shadow-sm lg:sticky lg:top-6">
         <CoachChatLog
           entries={chatEntries}
-          selectedPly={selectedPly}
-          onSelectPly={handleSelectPly}
+          activeLabel={viewState.label}
+          onSelectEntry={handleSelectChatEntry}
         />
         <ReflectionPanel
-          game={gameState}
-          position={currentPosition}
-          onReflectionAdded={handleReflectionAdded}
+          coachContext={coachContext}
+          onEntryAdded={handleEntryAdded}
         />
       </div>
     </div>

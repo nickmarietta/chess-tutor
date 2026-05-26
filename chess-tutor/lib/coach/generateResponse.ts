@@ -16,8 +16,15 @@ export async function generateCoachResponse(
   helpMode: HelpMode,
   context: CoachContext,
   positions: MoveHistoryEntry[] = [],
+  analysisMoves?: string[],
 ): Promise<string> {
-  const input: CoachInput = { userText, helpMode, context, positions };
+  const input: CoachInput = {
+    userText,
+    helpMode,
+    context,
+    positions,
+    analysisMoves,
+  };
   const prompt = buildCoachPrompt(input);
   const provider = createCoachProvider();
   return provider.complete(prompt);

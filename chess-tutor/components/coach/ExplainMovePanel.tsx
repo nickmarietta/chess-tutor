@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { formatMoveContext } from "@/components/coach/CoachChatLog";
+import {
+  buildExplainPayload,
+  type CoachPositionContext,
+} from "@/types/coach";
 import type { ExplainResponse } from "@/types/annotations";
-import type { Game, HelpMode, Position } from "@/types";
 
 type ExplainMovePanelProps = {
-  game: Game;
-  position: Position;
+  coachContext: CoachPositionContext;
   onExplainResult: (result: ExplainResponse) => void;
   onClear: () => void;
   hasAnnotations: boolean;
@@ -15,8 +16,7 @@ type ExplainMovePanelProps = {
 };
 
 export function ExplainMovePanel({
-  game,
-  position,
+  coachContext,
   onExplainResult,
   onClear,
   hasAnnotations,
@@ -26,25 +26,19 @@ export function ExplainMovePanel({
   const [error, setError] = useState<string | null>(null);
   const [lastExplanation, setLastExplanation] = useState<string | null>(null);
 
-  const moveLabel = formatMoveContext(position.ply, position.move_san);
-  const canExplainMove = position.ply > 0 && position.move_san;
+  const { view } = coachContext;
+  const canExplainMove = !!view.moveSan;
 
   async function requestExplain(explainBestMove: boolean) {
     setLoading(true);
     setError(null);
 
     try {
+      const payload = buildExplainPayload(coachContext, explainBestMove);
       const res = await fetch("/api/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gameId: game.id,
-          positionId: position.id,
-          ply: position.ply,
-          selectedMoveSan: position.move_san,
-          explainBestMove,
-          helpMode: "guide" as HelpMode,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -63,7 +57,7 @@ export function ExplainMovePanel({
     <div className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4">
       <div>
         <h3 className="text-sm font-semibold text-stone-900">Explain move</h3>
-        <p className="text-xs text-stone-500">{moveLabel}</p>
+        <p className="text-xs text-stone-500">{view.label}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -76,18 +70,16 @@ export function ExplainMovePanel({
           {loading ? "Explaining…" : "Explain this move"}
         </button>
 
-        {engineBestMove &&
-          engineBestMove !== position.move_san &&
-          position.ply > 0 && (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => requestExplain(true)}
-              className="rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-900 hover:bg-green-100 disabled:opacity-50"
-            >
-              Explain {engineBestMove}
-            </button>
-          )}
+        {engineBestMove && engineBestMove !== view.moveSan && (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => requestExplain(true)}
+            className="rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-900 hover:bg-green-100 disabled:opacity-50"
+          >
+            Explain {engineBestMove}
+          </button>
+        )}
 
         {hasAnnotations && (
           <button
@@ -103,9 +95,9 @@ export function ExplainMovePanel({
         )}
       </div>
 
-      {engineBestMove && position.ply > 0 && (
+      {engineBestMove && (
         <p className="text-xs text-stone-500">
-          Suggested line (mock):{" "}
+          Idea to try (mock):{" "}
           <span className="font-mono font-medium text-stone-700">
             {engineBestMove}
           </span>

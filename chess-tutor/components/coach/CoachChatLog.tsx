@@ -1,19 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { HelpMode, Reflection } from "@/types";
-
-export type ReflectionEntry = Reflection & {
-  ply: number;
-  moveSan: string | null;
-};
-
-export function formatMoveContext(ply: number, moveSan: string | null): string {
-  if (ply === 0) return "Starting position";
-  if (!moveSan) return `Ply ${ply}`;
-  const moveNum = Math.ceil(ply / 2);
-  return ply % 2 === 1 ? `${moveNum}. ${moveSan}` : `${moveNum}… ${moveSan}`;
-}
+import type { HelpMode } from "@/types";
+import type { ChatEntry } from "@/types/coach";
 
 const HELP_MODE_LABELS: Record<HelpMode, string> = {
   hint: "Hint",
@@ -22,15 +11,15 @@ const HELP_MODE_LABELS: Record<HelpMode, string> = {
 };
 
 type CoachChatLogProps = {
-  entries: ReflectionEntry[];
-  selectedPly: number;
-  onSelectPly: (ply: number) => void;
+  entries: ChatEntry[];
+  activeLabel: string;
+  onSelectEntry: (entry: ChatEntry) => void;
 };
 
 export function CoachChatLog({
   entries,
-  selectedPly,
-  onSelectPly,
+  activeLabel,
+  onSelectEntry,
 }: CoachChatLogProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,16 +39,16 @@ export function CoachChatLog({
         <h3 className="text-sm font-semibold text-stone-900">Coaching log</h3>
         <p className="text-xs text-stone-500">
           {sorted.length === 0
-            ? "Your questions and coach replies appear here."
-            : `${sorted.length} ${sorted.length === 1 ? "entry" : "entries"} · click to jump to that move`}
+            ? "Drag pieces to try moves, then ask your coach about ideas."
+            : `${sorted.length} ${sorted.length === 1 ? "entry" : "entries"} · click to revisit`}
         </p>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3">
         {sorted.length === 0 ? (
           <p className="text-sm text-stone-400">
-            Select a move, describe your thinking, and get feedback. The log
-            stays here as you review the game.
+            Make moves on the board to explore lines, then ask questions about
+            plans and candidates. Your conversation stays here.
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -67,8 +56,8 @@ export function CoachChatLog({
               <li key={entry.id}>
                 <ChatEntry
                   entry={entry}
-                  isActive={entry.ply === selectedPly}
-                  onSelect={() => onSelectPly(entry.ply)}
+                  isActive={entry.label === activeLabel}
+                  onSelect={() => onSelectEntry(entry)}
                 />
               </li>
             ))}
@@ -84,11 +73,10 @@ function ChatEntry({
   isActive,
   onSelect,
 }: {
-  entry: ReflectionEntry;
+  entry: ChatEntry;
   isActive: boolean;
   onSelect: () => void;
 }) {
-  const moveLabel = formatMoveContext(entry.ply, entry.moveSan);
   const time = new Date(entry.created_at).toLocaleTimeString(undefined, {
     hour: "numeric",
     minute: "2-digit",
@@ -105,8 +93,14 @@ function ChatEntry({
       }`}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md bg-stone-900 px-2 py-0.5 font-mono text-xs font-medium text-white">
-          {moveLabel}
+        <span
+          className={`rounded-md px-2 py-0.5 font-mono text-xs font-medium ${
+            entry.isAnalysis
+              ? "bg-violet-700 text-white"
+              : "bg-stone-900 text-white"
+          }`}
+        >
+          {entry.label}
         </span>
         <span className="text-xs text-stone-400">
           {HELP_MODE_LABELS[entry.help_mode]} · {time}
@@ -129,3 +123,13 @@ function ChatEntry({
     </button>
   );
 }
+
+/** @deprecated use ChatEntry label field */
+export function formatMoveContext(ply: number, moveSan: string | null): string {
+  if (ply === 0) return "Starting position";
+  if (!moveSan) return `Ply ${ply}`;
+  const moveNum = Math.ceil(ply / 2);
+  return ply % 2 === 1 ? `${moveNum}. ${moveSan}` : `${moveNum}… ${moveSan}`;
+}
+
+export type { ChatEntry };

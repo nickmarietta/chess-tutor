@@ -41,12 +41,16 @@ export type EngineContext = {
 
 export type ExplainRequest = {
   gameId: string;
-  positionId: string;
-  ply: number;
+  /** DB position when on the imported game line */
+  positionId?: string;
+  /** Current board FEN — required for analysis mode */
+  fen?: string;
+  fenBefore?: string | null;
+  ply?: number;
   helpMode?: "hint" | "guide" | "answer";
   userReflection?: string;
-  /** Move to explain (defaults to move that reached this position) */
   selectedMoveSan?: string | null;
-  /** Explain engine best move instead of the played move */
   explainBestMove?: boolean;
+  isAnalysis?: boolean;
+  analysisMoves?: string[];
 };

@@ -14,19 +14,19 @@ export async function POST(request: Request) {
       userText?: string;
       helpMode?: HelpMode;
       fen?: string;
+      fenBefore?: string | null;
       moveSan?: string | null;
       ply?: number;
       whitePlayer?: string | null;
       blackPlayer?: string | null;
+      isAnalysis?: boolean;
+      analysisMoves?: string[];
     };
 
     const { gameId, positionId, userText, helpMode } = body;
 
-    if (!gameId || !positionId) {
-      return NextResponse.json(
-        { error: "gameId and positionId are required." },
-        { status: 400 },
-      );
+    if (!gameId) {
+      return NextResponse.json({ error: "gameId is required." }, { status: 400 });
     }
 
     if (!helpMode || !HELP_MODES.includes(helpMode)) {
@@ -38,9 +38,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Game not found." }, { status: 404 });
     }
 
-    const currentPosition = gameData.positions.find((p) => p.id === positionId);
-    if (!currentPosition) {
-      return NextResponse.json({ error: "Position not found." }, { status: 404 });
+    const dbPosition = positionId
+      ? gameData.positions.find((p) => p.id === positionId)
+      : null;
+
+    const fen = body.fen ?? dbPosition?.fen;
+    if (!fen) {
+      return NextResponse.json(
+        { error: "fen or valid positionId is required." },
+        { status: 400 },
+      );
     }
 
     const positions = gameData.positions.map((p) => ({
@@ -52,16 +59,26 @@ export async function POST(request: Request) {
       userText ?? "",
       helpMode,
       {
-        fen: currentPosition.fen,
-        moveSan: currentPosition.move_san,
-        ply: currentPosition.ply,
+        fen,
+        moveSan: body.moveSan ?? dbPosition?.move_san ?? null,
+        ply: body.ply ?? dbPosition?.ply ?? 0,
         whitePlayer: gameData.game.white_player,
         blackPlayer: gameData.game.black_player,
         playerUsername: gameData.game.player_username,
         userColor: gameData.game.user_color,
+        isAnalysis: body.isAnalysis ?? false,
+        analysisMoves: body.analysisMoves,
       },
       positions,
+      body.analysisMoves,
     );
+
+    if (!positionId || body.isAnalysis) {
+      return NextResponse.json({
+        coachResponse,
+        reflection: null,
+      });
+    }
 
     const supabase = createServerClient();
     const { data: reflection, error } = await supabase

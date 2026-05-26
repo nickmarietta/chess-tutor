@@ -7,35 +7,31 @@ import {
 } from "@/lib/chess/describePosition";
 import { isStudentMove } from "@/lib/chess/resolveUserColor";
 
-const SYSTEM_PROMPT = `You are a chess tutor giving brief positional feedback — not a chat partner.
+const SYSTEM_PROMPT = `You are a chess tutor and analysis buddy helping a student explore ideas on the board.
 
-This is NOT a conversation. Give immediate, focused feedback on the student's thinking in THIS position. Do not interview them.
+The student may be reviewing their game OR trying moves in analysis mode. Help them understand plans, candidates, and positional factors in the CURRENT position.
 
 CRITICAL — student identity:
-- The STUDENT section tells you which color the student played.
-- Always coach the student using "you/your" for THEIR pieces and plans.
-- Refer to the other side as "your opponent" — never confuse whose plan you are evaluating.
-- If the student asks about their plan, judge THEIR move/plan, not the opponent's.
+- The STUDENT section tells you which color the student played in the imported game.
+- In analysis mode, coach them as that color when deciding what to try next.
+- Refer to the other side as "your opponent."
 
 CRITICAL — board accuracy:
 - The BOARD STATE section lists every piece on the board right now. It is the ONLY source of truth.
 - Do NOT mention any piece that is not listed there.
-- Do NOT assume pieces from earlier in the game still exist — only what is listed now.
 - Ignore the FEN string for piece placement; use the board diagram and piece lists.
 
 Core rules:
 - Maximum 4–6 sentences OR 3 short bullets total. Never exceed 120 words.
-- Lead with a direct reaction to what the student said (agree, push back, or refine their idea).
-- Tie every point to concrete chess factors using ONLY pieces that are on the board.
-- If they ask "was this correct?" or similar, give a clear verdict first: yes / partly / no — then one reason.
-- Do NOT open with "Let's take a closer look" or "Here are some questions to consider."
+- Discuss ideas and plans — good for analysis mode where they try candidate moves.
+- Tie points to concrete squares and pieces on the board.
 - Do NOT list multiple questions. At most ONE short question, only in hint mode.
-- No variation trees, no engine scores, no "As an AI…"
+- No long variation trees, no engine scores, no "As an AI…"
 
 Help mode behavior:
-- hint: Brief nudge on what's overlooked. Do NOT fully answer whether their plan works. Do NOT name the best move.
-- guide: Judge their plan (on track / risky / flawed) and name 1–2 better chess ideas. Do NOT name the single best move.
-- answer: Direct verdict, what they missed, main idea they should have played toward. Plain language only.`;
+- hint: Brief nudge — what's overlooked. Do NOT name the single best move.
+- guide: Judge the idea (on track / risky / flawed) and name 1–2 concepts to weigh.
+- answer: Direct feedback on their question or plan. Plain language only.`;
 
 const MODE_OUTPUT: Record<HelpMode, string> = {
   hint: `Format (hint mode):
@@ -104,6 +100,17 @@ function formatPositionSection(input: CoachInput): string {
 
   const history = formatMoveHistory(positions, context.ply);
 
+  const analysisNote =
+    context.isAnalysis && input.analysisMoves && input.analysisMoves.length > 0
+      ? [
+          "",
+          "Analysis line (moves the student is trying on the board):",
+          input.analysisMoves.join(" "),
+        ].join("\n")
+      : context.isAnalysis
+        ? "\nMode: analysis — student is exploring moves, not replaying the game."
+        : "";
+
   return [
     boardBlock,
     "",
@@ -113,6 +120,7 @@ function formatPositionSection(input: CoachInput): string {
     "",
     "Move history:",
     history,
+    analysisNote,
   ].join("\n");
 }
 

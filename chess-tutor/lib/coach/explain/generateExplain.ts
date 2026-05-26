@@ -22,6 +22,8 @@ export type GenerateExplainInput = {
   userReflection?: string;
   explainBestMove?: boolean;
   positions: { ply: number; move_san: string | null; fen: string }[];
+  analysisMoves?: string[];
+  isAnalysis?: boolean;
 };
 
 function summarizeAnnotations(response: Pick<ExplainResponse, "highlights" | "arrows" | "variation">): string {
@@ -55,7 +57,9 @@ export async function generateExplain(
 
   const continuation = input.explainBestMove
     ? buildContinuationFromPositions(input.positions, input.ply, 3)
-    : engine.variation;
+    : input.isAnalysis && input.analysisMoves?.length
+      ? []
+      : engine.variation;
 
   const { highlights, arrows, variation } = buildBoardAnnotations({
     fenBefore: input.fenBefore,
