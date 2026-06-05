@@ -37,7 +37,7 @@ export function AnalysisBoard({
   }
 
   return (
-    <div className="aspect-square w-full max-w-[480px] overflow-hidden rounded-xl border border-stone-200 shadow-sm">
+    <div className="aspect-square h-full w-full overflow-hidden bg-[var(--surface)]">
       <Chessboard
         options={{
           position: fen,
@@ -48,7 +48,7 @@ export function AnalysisBoard({
           clearArrowsOnPositionChange: false,
           onPieceDrop: handlePieceDrop,
           boardStyle: {
-            borderRadius: "0.75rem",
+            borderRadius: 0,
           },
         }}
       />

@@ -1,38 +1,47 @@
 "use client";
 
-import type { Position } from "@/types";
+import type { MoveAnalysis, Position } from "@/types";
 
 type MoveListProps = {
   positions: Position[];
+  analyses?: MoveAnalysis[];
   selectedPly: number;
   onSelectPly: (ply: number) => void;
-  highlightedPlies?: Set<number>;
+  showMistakes?: boolean;
 };
+
+function severityDot(severity: MoveAnalysis["mistake_severity"]) {
+  if (severity === "blunder") return "bg-red-500";
+  if (severity === "mistake") return "bg-orange-500";
+  if (severity === "inaccuracy") return "bg-amber-500";
+  return null;
+}
 
 export function MoveList({
   positions,
+  analyses = [],
   selectedPly,
   onSelectPly,
-  highlightedPlies,
+  showMistakes = true,
 }: MoveListProps) {
   const moves = positions.filter((p) => p.move_san);
+  const analysisByPly = new Map(analyses.map((a) => [a.ply, a]));
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <button
         type="button"
         onClick={() => onSelectPly(0)}
         className={`rounded-lg px-3 py-2 text-left text-sm transition ${
           selectedPly === 0
-            ? "bg-amber-100 font-medium text-amber-900"
-            : "text-stone-600 hover:bg-stone-100"
+            ? "bg-[var(--accent-muted)] font-medium text-[var(--text)]"
+            : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
         }`}
       >
-        Start position
-        {highlightedPlies?.has(0) && <ReflectionDot />}
+        Start
       </button>
-      <div className="max-h-[min(24rem,calc(100vh-20rem))] overflow-y-auto rounded-lg border border-stone-200 bg-stone-50 p-2">
-        <div className="grid grid-cols-[auto_1fr_1fr] gap-x-2 gap-y-1 text-sm">
+      <div className="max-h-[min(32rem,calc(100vh-14rem))] overflow-y-auto">
+        <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-1 text-sm">
           {Array.from({ length: Math.ceil(moves.length / 2) }, (_, i) => {
             const moveNumber = i + 1;
             const white = moves[i * 2];
@@ -40,25 +49,29 @@ export function MoveList({
 
             return (
               <div key={moveNumber} className="contents">
-                <span className="px-1 text-stone-400">{moveNumber}.</span>
+                <span className="py-1.5 text-[var(--text-subtle)]">
+                  {moveNumber}.
+                </span>
                 {white ? (
-                  <MoveButton
+                  <MoveCell
                     label={white.move_san!}
                     ply={white.ply}
-                    selectedPly={selectedPly}
+                    analysis={analysisByPly.get(white.ply)}
+                    selected={selectedPly === white.ply}
+                    showMistakes={showMistakes}
                     onSelect={onSelectPly}
-                    hasReflection={highlightedPlies?.has(white.ply)}
                   />
                 ) : (
                   <span />
                 )}
                 {black ? (
-                  <MoveButton
+                  <MoveCell
                     label={black.move_san!}
                     ply={black.ply}
-                    selectedPly={selectedPly}
+                    analysis={analysisByPly.get(black.ply)}
+                    selected={selectedPly === black.ply}
+                    showMistakes={showMistakes}
                     onSelect={onSelectPly}
-                    hasReflection={highlightedPlies?.has(black.ply)}
                   />
                 ) : (
                   <span />
@@ -72,37 +85,36 @@ export function MoveList({
   );
 }
 
-function ReflectionDot() {
-  return (
-    <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle" />
-  );
-}
-
-function MoveButton({
+function MoveCell({
   label,
   ply,
-  selectedPly,
+  analysis,
+  selected,
+  showMistakes,
   onSelect,
-  hasReflection,
 }: {
   label: string;
   ply: number;
-  selectedPly: number;
+  analysis?: MoveAnalysis;
+  selected: boolean;
+  showMistakes: boolean;
   onSelect: (ply: number) => void;
-  hasReflection?: boolean;
 }) {
+  const severity = analysis?.mistake_severity ?? "none";
+  const dot = showMistakes ? severityDot(severity) : null;
+
   return (
     <button
       type="button"
       onClick={() => onSelect(ply)}
-      className={`rounded px-2 py-1 text-left font-mono transition ${
-        selectedPly === ply
-          ? "bg-amber-200 text-amber-950"
-          : "text-stone-700 hover:bg-stone-200"
+      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 font-mono text-left transition ${
+        selected
+          ? "bg-[var(--accent-muted)] text-[var(--text)]"
+          : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
       }`}
     >
-      {label}
-      {hasReflection && <ReflectionDot />}
+      {dot && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />}
+      <span>{label}</span>
     </button>
   );
 }

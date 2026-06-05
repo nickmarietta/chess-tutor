@@ -1,7 +1,5 @@
 export type GameSource = "pgn_paste" | "chess_com";
 
-export type HelpMode = "hint" | "guide" | "answer";
-
 export type UserColor = "white" | "black";
 
 export type ParsedPosition = {
@@ -20,12 +18,16 @@ export type ParsedGameMetadata = {
 
 export type Game = {
   id: string;
+  user_id: string | null;
   source: GameSource;
   source_game_id: string | null;
   white_player: string | null;
   black_player: string | null;
   player_username: string | null;
   user_color: UserColor | null;
+  analysis_status: "pending" | "analyzing" | "completed" | "failed";
+  analysis_error: string | null;
+  analysis_completed_at: string | null;
   result: string | null;
   played_at: string | null;
   raw_pgn: string;
@@ -38,16 +40,6 @@ export type Position = {
   ply: number;
   fen: string;
   move_san: string | null;
-  created_at: string;
-};
-
-export type Reflection = {
-  id: string;
-  game_id: string;
-  position_id: string;
-  user_text: string;
-  help_mode: HelpMode;
-  coach_response: string | null;
   created_at: string;
 };
 
@@ -67,9 +59,14 @@ export type {
   BoardAnnotations,
   BoardArrow,
   BoardHighlight,
-  EngineContext,
-  ExplainRequest,
-  ExplainResponse,
   HighlightType,
-  VariationMove,
 } from "./annotations";
+export type {
+  AnalysisStatus,
+  CandidateMove,
+  EngineLineMove,
+  MistakeSeverity,
+  MistakeTag,
+  MoveAnalysis,
+  UserMistakeStat,
+} from "./analysis";

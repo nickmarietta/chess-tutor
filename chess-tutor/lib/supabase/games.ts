@@ -1,4 +1,15 @@
-import type { GameSource, ParsedGameMetadata, UserColor } from "@/types";
+import {
+  listMoveAnalyses,
+  replaceMoveAnalyses,
+  syncMoveAnalysesUserColor,
+  updateGameAnalysisState,
+  upsertUserMistakeStats,
+} from "./analysis";
+import type {
+  GameSource,
+  ParsedGameMetadata,
+  UserColor,
+} from "@/types";
 import { createServerClient } from "./server";
 
 export type CreateGameInput = {
@@ -34,6 +45,9 @@ export async function createGameWithPositions(input: CreateGameInput) {
     result: metadata.result,
     played_at: metadata.playedAt,
     raw_pgn: rawPgn,
+    analysis_status: "pending",
+    analysis_error: null,
+    analysis_completed_at: null,
   };
 
   const fullRow = {
@@ -112,18 +126,12 @@ export async function getGameById(gameId: string) {
 
   if (positionsError) throw new Error(positionsError.message);
 
-  const { data: reflections, error: reflectionsError } = await supabase
-    .from("reflections")
-    .select("*")
-    .eq("game_id", gameId)
-    .order("created_at", { ascending: true });
-
-  if (reflectionsError) throw new Error(reflectionsError.message);
+  const analyses = await listMoveAnalyses(gameId);
 
   return {
     game,
     positions: positions ?? [],
-    reflections: reflections ?? [],
+    analyses,
   };
 }
 
@@ -133,7 +141,7 @@ export async function updateGameUserColor(
   playerUsername?: string | null,
 ) {
   const supabase = createServerClient();
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("games")
     .update({
       user_color: userColor,
@@ -150,5 +158,6 @@ export async function updateGameUserColor(
   }
 
   if (error) throw new Error(error.message);
+  await syncMoveAnalysesUserColor(gameId, userColor);
   return data;
 }

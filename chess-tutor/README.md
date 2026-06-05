@@ -1,6 +1,6 @@
 # Chess Tutor
 
-AI-guided chess analysis: import games, review positions on a board, reflect on your thinking, and get coaching feedback.
+Import chess games, step through moves, and analyze positions with Stockfish.
 
 ## Stack
 
@@ -9,6 +9,7 @@ AI-guided chess analysis: import games, review positions on a board, reflect on 
 - Tailwind CSS 4
 - Supabase (Postgres)
 - chess.js + react-chessboard
+- Stockfish (`@se-oss/stockfish`)
 
 ## Getting started
 
@@ -21,9 +22,10 @@ npm install
 ### 2. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run both SQL files in the SQL editor (in order):
+2. Run the SQL migrations in the SQL editor (in order):
    - `supabase/migrations/20240520000000_initial.sql`
    - `supabase/migrations/20240520100000_game_user_color.sql`
+   - `supabase/migrations/20260526211000_analysis_v2.sql`
 3. Copy `.env.local.example` to `.env.local` and add your project URL and anon key.
 
 ### 3. Run locally
@@ -39,48 +41,19 @@ Open [http://localhost:3000](http://localhost:3000).
 | Route | Description |
 |-------|-------------|
 | `/` | Landing page |
-| `/import` | PGN paste + Chess.com PubAPI import |
+| `/import` | PGN paste + Chess.com import |
 | `/games` | Imported games list |
-| `/games/[gameId]` | Review board, moves, reflections, coaching |
+| `/games/[gameId]` | Board, move list, Stockfish eval bar, engine lines |
 
 ## API
 
-- `POST /api/games` — parse PGN, store game + positions
+- `POST /api/games` — parse PGN, store game + positions, run Stockfish analysis
 - `GET /api/games` — list games
-- `GET /api/games/[gameId]` — game detail
-- `POST /api/coach` — save reflection + placeholder coach response
+- `GET/PATCH /api/games/[gameId]` — game detail / set user color
+- `POST /api/eval` — live Stockfish eval for a FEN
 - `GET /api/chesscom/archives?username=` — Chess.com archive URLs
 - `GET /api/chesscom/games?archiveUrl=` — games for a month
-
-## Coaching
-
-Prompt content lives in **`lib/coach/prompt.ts`** (provider-neutral). Model transport lives in **`lib/coach/providers/`**.
-
-```env
-COACH_PROVIDER=ollama              # or openrouter | gemini | mock
-COACH_MODEL=llama3.2                 # must match a model you've pulled locally
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-```
-
-**Local setup:** install [Ollama](https://ollama.com), run `ollama serve`, then `ollama pull llama3.2` (or whatever you set in `COACH_MODEL`). Use `ollama list` to see available models.
-
-To add another provider: implement `CoachProvider` in a new file under `providers/`, add a case in `providers/index.ts`. Do not change `prompt.ts`.
-
-Hint mode rules are enforced in the system prompt — not in provider code.
-
-### Explain move (v1)
-
-- `POST /api/explain` — structured explanation + board annotations
-- Annotations (squares, arrows, variation) are built from **chess.js + game positions**, not LLM output
-- Mock engine in `lib/engine/mockEngine.ts` — swap for Stockfish later
 
 ## Deploy
 
 Deploy to Vercel (or similar). Set the same Supabase env vars in the hosting dashboard.
-
-## Out of scope (v1)
-
-- Live multiplayer / human coaching
-- Voice input
-- Lichess integration
-- Chess.com scraping (PubAPI only)

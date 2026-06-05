@@ -1,153 +1,67 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { AnalysisBoard } from "@/components/board/AnalysisBoard";
 import { AnalysisLineMoves } from "@/components/board/AnalysisLineMoves";
+import { ChessBoardWithEval } from "@/components/board/ChessBoardWithEval";
 import { MoveList } from "@/components/board/MoveList";
-import { VariationPreview } from "@/components/board/VariationPreview";
-import { CoachChatLog } from "@/components/coach/CoachChatLog";
-import { ExplainMovePanel } from "@/components/coach/ExplainMovePanel";
-import { ReflectionPanel } from "@/components/coach/ReflectionPanel";
+import { EngineMovesPanel } from "@/components/games/EngineMovesPanel";
 import { UserColorBadge } from "@/components/games/UserColorBadge";
+import {
+  displayableEval,
+  useLiveEngineEval,
+} from "@/hooks/useLiveEngineEval";
 import { useAnalysisSession } from "@/hooks/useAnalysisSession";
-import { formatMoveContext } from "@/components/coach/CoachChatLog";
-import { getMockEngineContext } from "@/lib/engine/mockEngine";
-import type { ChatEntry } from "@/types/coach";
-import type { ExplainResponse } from "@/types/annotations";
-import type { Game, Position, Reflection, UserColor } from "@/types";
+import type { Game, MoveAnalysis, Position, UserColor } from "@/types";
 
 type GameReviewProps = {
   game: Game;
   positions: Position[];
-  reflections: Reflection[];
+  analyses: MoveAnalysis[];
 };
 
-function enrichReflections(
-  reflections: Reflection[],
-  positions: Position[],
-): ChatEntry[] {
-  const byId = new Map(positions.map((p) => [p.id, p]));
-  const entries: ChatEntry[] = [];
-  for (const r of reflections) {
-    const pos = byId.get(r.position_id);
-    if (!pos) continue;
-    entries.push({
-      ...r,
-      ply: pos.ply,
-      moveSan: pos.move_san,
-      label: formatMoveContext(pos.ply, pos.move_san),
-      isAnalysis: false,
-      anchorPly: pos.ply,
-      lineCursor: 0,
-    });
-  }
-  return entries;
-}
-
-export function GameReview({ game, positions, reflections }: GameReviewProps) {
+export function GameReview({ game, positions, analyses }: GameReviewProps) {
   const [gameState, setGameState] = useState(game);
-  const [chatEntries, setChatEntries] = useState<ChatEntry[]>(() =>
-    enrichReflections(reflections, positions),
-  );
-  const [explainResult, setExplainResult] = useState<ExplainResponse | null>(
-    null,
-  );
-  const [variationPreviewIndex, setVariationPreviewIndex] = useState(-1);
 
   const {
     anchorPly,
     viewState,
+    analysisMode,
     goToGamePly,
+    enterAnalysisMode,
+    exitAnalysisMode,
     makeMove,
     stepBack,
     stepForward,
     resetToGame,
     goToLineIndex,
-    restoreSnapshot,
   } = useAnalysisSession(positions);
 
-  const coachContext = useMemo(
-    () => ({ game: gameState, view: viewState }),
-    [gameState, viewState],
-  );
-
-  const pliesWithReflections = useMemo(
-    () => new Set(chatEntries.filter((e) => !e.isAnalysis).map((e) => e.ply)),
-    [chatEntries],
-  );
-
   const boardOrientation = gameState.user_color ?? "white";
+  const analysisByPositionId = useMemo(
+    () => new Map(analyses.map((a) => [a.position_id, a])),
+    [analyses],
+  );
+  const selectedAnalysis =
+    (viewState.anchorPosition
+      ? analysisByPositionId.get(viewState.anchorPosition.id)
+      : undefined) ?? null;
 
-  const mockEngine = useMemo(() => {
-    return getMockEngineContext(
-      positions,
-      viewState.ply,
-      viewState.fenBefore,
-    );
-  }, [positions, viewState.ply, viewState.fenBefore]);
+  const board = viewState.board;
+  const liveEngineEval = useLiveEngineEval(board);
+  const barEval = displayableEval(board, liveEngineEval);
 
-  const boardFen = useMemo(() => {
-    if (
-      variationPreviewIndex >= 0 &&
-      explainResult?.variation[variationPreviewIndex]
-    ) {
-      return explainResult.variation[variationPreviewIndex].fenAfter;
-    }
-    return viewState.fen;
-  }, [variationPreviewIndex, explainResult, viewState.fen]);
-
-  const boardAnnotations =
-    explainResult && variationPreviewIndex === -1
-      ? {
-          highlights: explainResult.highlights,
-          arrows: explainResult.arrows,
-        }
-      : null;
-
-  const clearBoardExtras = useCallback(() => {
-    setExplainResult(null);
-    setVariationPreviewIndex(-1);
-  }, []);
-
-  const handleSelectGamePly = useCallback(
+  const handleSelectPly = useCallback(
     (ply: number) => {
+      if (analysisMode) exitAnalysisMode();
       goToGamePly(ply);
-      clearBoardExtras();
     },
-    [goToGamePly, clearBoardExtras],
+    [analysisMode, exitAnalysisMode, goToGamePly],
   );
 
   const handleBoardMove = useCallback(
-    (from: string, to: string) => {
-      const ok = makeMove(from, to);
-      if (ok) clearBoardExtras();
-      return ok;
-    },
-    [makeMove, clearBoardExtras],
+    (from: string, to: string) => makeMove(from, to),
+    [makeMove],
   );
-
-  const handleEntryAdded = useCallback((entry: ChatEntry) => {
-    setChatEntries((prev) => [...prev, entry]);
-  }, []);
-
-  const handleSelectChatEntry = useCallback(
-    (entry: ChatEntry) => {
-      if (entry.anchorPly !== undefined) {
-        restoreSnapshot(
-          entry.anchorPly,
-          entry.lineCursor ?? 0,
-          entry.analysisMoves ?? [],
-        );
-        clearBoardExtras();
-      }
-    },
-    [restoreSnapshot, clearBoardExtras],
-  );
-
-  const handleExplainResult = useCallback((result: ExplainResponse) => {
-    setExplainResult(result);
-    setVariationPreviewIndex(-1);
-  }, []);
 
   async function handleColorSet(color: UserColor) {
     const res = await fetch(`/api/games/${gameState.id}`, {
@@ -156,124 +70,104 @@ export function GameReview({ game, positions, reflections }: GameReviewProps) {
       body: JSON.stringify({ userColor: color }),
     });
     const data = await res.json();
-    if (res.ok && data.game) {
-      setGameState(data.game);
+    if (res.ok && data.game) setGameState(data.game);
+  }
+
+  function toggleAnalysisMode() {
+    if (analysisMode) {
+      exitAnalysisMode();
+    } else {
+      enterAnalysisMode();
     }
   }
 
-  const showAnalysisLine =
-    viewState.isAnalysis || viewState.line.nodes.length > 1;
-
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)_minmax(280px,360px)] lg:items-start">
-      <div className="flex flex-col gap-4 lg:sticky lg:top-6">
-        <AnalysisBoard
-          fen={boardFen}
-          orientation={boardOrientation}
-          annotations={boardAnnotations}
-          interactive
-          onMove={handleBoardMove}
-        />
-
-        <p className="text-xs text-stone-500">
-          Drag pieces to try moves · analysis mode
-        </p>
-
-        {showAnalysisLine && (
-          <AnalysisLineMoves
-            line={viewState.line}
-            onSelectIndex={goToLineIndex}
-          />
-        )}
-
-        {explainResult && explainResult.variation.length > 0 && (
-          <VariationPreview
-            variation={explainResult.variation}
-            previewIndex={variationPreviewIndex}
-            onPreviewIndexChange={setVariationPreviewIndex}
-          />
-        )}
-
-        <p className="text-sm text-stone-600">
-          {viewState.label}
-          {viewState.isAnalysis && (
-            <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">
-              Analysis
-            </span>
-          )}
-        </p>
-
-        <ExplainMovePanel
-          coachContext={coachContext}
-          onExplainResult={handleExplainResult}
-          onClear={clearBoardExtras}
-          hasAnnotations={!!explainResult}
-          engineBestMove={mockEngine?.bestMoveSan ?? null}
-        />
-
-        <div className="flex flex-wrap gap-2">
-          <NavButton
-            label="← Back"
-            disabled={!viewState.canStepBack}
-            onClick={() => {
-              stepBack();
-              clearBoardExtras();
-            }}
-          />
-          <NavButton
-            label="Forward →"
-            disabled={!viewState.canStepForward}
-            onClick={() => {
-              stepForward();
-              clearBoardExtras();
-            }}
-          />
-          {showAnalysisLine && (
-            <NavButton
-              label="Back to game"
-              disabled={false}
-              onClick={() => {
-                resetToGame();
-                clearBoardExtras();
-              }}
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-6">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col overflow-hidden">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-4 sm:px-6">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-stone-900">
-              {gameState.white_player ?? "White"} vs{" "}
-              {gameState.black_player ?? "Black"}
-            </h2>
-            <UserColorBadge game={gameState} onColorSet={handleColorSet} />
-          </div>
-          <p className="mt-1 text-sm text-stone-500">
-            {gameState.result ?? "—"} ·{" "}
-            {gameState.source === "chess_com" ? "Chess.com" : "PGN import"}
+          <h1 className="text-base font-medium text-[var(--text)]">
+            {gameState.white_player ?? "White"} vs{" "}
+            {gameState.black_player ?? "Black"}
+          </h1>
+          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+            {gameState.result ?? "—"}
           </p>
         </div>
+        <UserColorBadge game={gameState} onColorSet={handleColorSet} />
+      </header>
 
-        <MoveList
-          positions={positions}
-          selectedPly={anchorPly}
-          onSelectPly={handleSelectGamePly}
-          highlightedPlies={pliesWithReflections}
-        />
-      </div>
+      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-b border-[var(--border)] p-4 lg:border-b-0 lg:border-r">
+          <div>
+            <h2 className="text-xs font-medium uppercase tracking-wide text-[var(--text-subtle)]">
+              Moves
+            </h2>
+            <div className="mt-3">
+              <MoveList
+                positions={positions}
+                analyses={analyses}
+                selectedPly={anchorPly}
+                onSelectPly={handleSelectPly}
+                showMistakes
+              />
+            </div>
+          </div>
+          <EngineMovesPanel
+            analysis={selectedAnalysis}
+            analyses={analyses}
+            userColor={gameState.user_color}
+          />
+        </aside>
 
-      <div className="flex max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-xl border border-stone-200 bg-stone-50 shadow-sm lg:sticky lg:top-6">
-        <CoachChatLog
-          entries={chatEntries}
-          activeLabel={viewState.label}
-          onSelectEntry={handleSelectChatEntry}
-        />
-        <ReflectionPanel
-          coachContext={coachContext}
-          onEntryAdded={handleEntryAdded}
-        />
+        <section className="flex min-h-0 flex-col items-center gap-5 overflow-y-auto p-6 lg:p-10">
+          <ChessBoardWithEval
+            fen={board.fen}
+            orientation={boardOrientation}
+            interactive={analysisMode}
+            onMove={handleBoardMove}
+            evalWhite={barEval.evalWhite}
+            scoreType={barEval.scoreType}
+            evalStatus={barEval.status}
+          />
+
+          <p className="text-sm text-[var(--text-muted)]">{viewState.label}</p>
+
+          {analysisMode && viewState.line.nodes.length > 1 && (
+            <AnalysisLineMoves
+              line={viewState.line}
+              onSelectIndex={goToLineIndex}
+            />
+          )}
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <NavButton
+              label="←"
+              disabled={!viewState.canStepBack}
+              onClick={stepBack}
+            />
+            <NavButton
+              label="→"
+              disabled={!viewState.canStepForward}
+              onClick={stepForward}
+            />
+            {analysisMode && (
+              <button
+                type="button"
+                onClick={resetToGame}
+                className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
+              >
+                Reset line
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={toggleAnalysisMode}
+              className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-hover)]"
+            >
+              {analysisMode ? "Exit analysis" : "Analyze position"}
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -293,7 +187,7 @@ function NavButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-40"
+      className="min-w-[3rem] rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-hover)] disabled:opacity-30"
     >
       {label}
     </button>

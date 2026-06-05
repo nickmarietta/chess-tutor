@@ -21,7 +21,7 @@ export default async function GamesPage() {
         <div>
           <h1 className="text-3xl font-bold text-stone-900">My games</h1>
           <p className="mt-1 text-stone-600">
-            Games you have imported for review and coaching.
+            Games you have imported for review.
           </p>
         </div>
         <Link

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { analyzeGameNow } from "@/lib/analysis/service";
 import { parsePgn } from "@/lib/chess/parsePgn";
 import { resolveUserColor } from "@/lib/chess/resolveUserColor";
 import { createGameWithPositions, listGames } from "@/lib/supabase/games";
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
       playerUsername,
       userColor,
     });
+
+    await analyzeGameNow(game.id);
 
     return NextResponse.json({ game }, { status: 201 });
   } catch (err) {

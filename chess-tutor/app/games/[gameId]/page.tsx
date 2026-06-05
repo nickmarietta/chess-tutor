@@ -1,5 +1,5 @@
 import { GameReview } from "@/components/games/GameReview";
-import { PageContainer } from "@/components/layout/PageContainer";
+import { ensureGameAnalysis } from "@/lib/analysis/service";
 import { getGameById } from "@/lib/supabase/games";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,36 +18,38 @@ export default async function GameReviewPage({ params }: PageProps) {
 
   try {
     data = await getGameById(gameId);
+    if (
+      data &&
+      (data.game.analysis_status !== "completed" ||
+        data.analyses.length !== Math.max(0, data.positions.length - 1))
+    ) {
+      data = await ensureGameAnalysis(gameId);
+    }
   } catch (err) {
     error = err instanceof Error ? err.message : "Could not load game.";
   }
 
   if (error) {
     return (
-      <PageContainer>
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <div className="mx-auto max-w-lg px-4 py-16">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
           {error}
         </div>
-        <Link href="/games" className="mt-4 inline-block text-sm text-amber-700">
-          ← Back to games
+        <Link
+          href="/games"
+          className="mt-4 inline-block text-sm text-[var(--text-muted)]"
+        >
+          ← All games
         </Link>
-      </PageContainer>
+      </div>
     );
   }
 
   if (!data) notFound();
 
-  const { game, positions, reflections } = data;
+  const { game, positions, analyses } = data;
 
   return (
-    <PageContainer>
-      <Link
-        href="/games"
-        className="mb-6 inline-block text-sm font-medium text-stone-500 hover:text-stone-800"
-      >
-        ← All games
-      </Link>
-      <GameReview game={game} positions={positions} reflections={reflections} />
-    </PageContainer>
+    <GameReview game={game} positions={positions} analyses={analyses} />
   );
 }
