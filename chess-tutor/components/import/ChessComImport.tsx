@@ -15,7 +15,7 @@ export function ChessComImport() {
   const [importingId, setImportingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadArchives(e: React.FormEvent) {
+  async function loadArchives(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -58,6 +58,11 @@ export function ChessComImport() {
   }
 
   async function importGame(game: ChessComArchiveGame) {
+    if (!game.pgn) {
+      setError("This game has no PGN data and cannot be imported.");
+      return;
+    }
+
     setImportingId(game.url);
     setError(null);
 
@@ -152,7 +157,9 @@ export function ChessComImport() {
                 <span className="font-medium text-stone-900">
                   {game.white.username} vs {game.black.username}
                 </span>
-                <span className="ml-2 text-stone-500">{game.result}</span>
+                <span className="ml-2 text-stone-500">
+                  {game.white.result === "win" ? "1-0" : game.black.result === "win" ? "0-1" : game.white.result ? "½-½" : null}
+                </span>
                 {game.time_control && (
                   <span className="ml-2 text-stone-400">{game.time_control}</span>
                 )}

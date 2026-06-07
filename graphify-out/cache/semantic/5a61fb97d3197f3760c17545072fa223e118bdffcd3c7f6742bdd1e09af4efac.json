@@ -1,0 +1,1 @@
+{"nodes": [{"id": "games_route_get_chesscom", "label": "GET /api/chesscom/games", "file_type": "code", "source_file": "chess-tutor/app/api/chesscom/games/route.ts", "source_location": "line 4", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

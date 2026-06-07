@@ -45,13 +45,12 @@ export type Position = {
 
 export type ChessComArchiveGame = {
   url: string;
-  pgn: string;
+  pgn: string | null;
   time_control: string | null;
   end_time: number | null;
   rated: boolean;
-  white: { username: string; rating?: number };
-  black: { username: string; rating?: number };
-  result: string;
+  white: { username: string; rating?: number; result?: string };
+  black: { username: string; rating?: number; result?: string };
 };
 
 export type {

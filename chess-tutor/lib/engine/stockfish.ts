@@ -68,8 +68,10 @@ export async function analyzePositionWithStockfish(
     if (!raw) {
       throw new Error("Stockfish returned no score for position");
     }
+    // @se-oss/stockfish passes through raw UCI scores (side-to-move positive),
+    // so we must flip the sign when it is Black's turn.
     const normalized = normalizeScoreToWhite(fen, raw, {
-      assumeWhitePositive: true,
+      assumeWhitePositive: false,
     });
 
     return {
@@ -83,7 +85,7 @@ export async function analyzePositionWithStockfish(
         const uci = line.pv.split(/\s+/)[0] ?? null;
         const lineRaw = rawScoreFromLine(line.score);
         const lineNorm = lineRaw
-          ? normalizeScoreToWhite(fen, lineRaw, { assumeWhitePositive: true })
+          ? normalizeScoreToWhite(fen, lineRaw, { assumeWhitePositive: false })
           : null;
         return {
           san: uciToSan(fen, uci),

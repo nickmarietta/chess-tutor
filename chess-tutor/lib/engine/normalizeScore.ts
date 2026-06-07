@@ -21,7 +21,8 @@ export type NormalizedEngineScore = {
 
 /**
  * Normalize engine output to White's perspective.
- * @se-oss/stockfish reports white-positive scores; set assumeWhitePositive=false for raw UCI (STM) scores.
+ * @se-oss/stockfish passes through raw UCI scores (side-to-move positive),
+ * so callers must set assumeWhitePositive=false.
  */
 export function normalizeScoreToWhite(
   fen: string,

@@ -1,0 +1,1 @@
+{"nodes": [{"id": "chess_moveannotations_sidetomovefromfen", "label": "sideToMoveFromFen Function", "file_type": "code", "source_file": "chess-tutor/lib/chess/moveAnnotations.ts", "source_location": "line 2", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

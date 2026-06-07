@@ -1,0 +1,342 @@
+{
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/api/chesscom/archives/route.ts": {
+    "mtime": 1780613218.7335596,
+    "ast_hash": "beb3a650ce4596618815b2af3e374dd1",
+    "semantic_hash": "beb3a650ce4596618815b2af3e374dd1"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/api/chesscom/games/route.ts": {
+    "mtime": 1780613218.733734,
+    "ast_hash": "bdaaffac51ecff1226f19b4ffaca3beb",
+    "semantic_hash": "bdaaffac51ecff1226f19b4ffaca3beb"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/api/games/[gameId]/route.ts": {
+    "mtime": 1780613218.7344909,
+    "ast_hash": "04457325f038c54a0ddd52027e24809d",
+    "semantic_hash": "04457325f038c54a0ddd52027e24809d"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/api/games/route.ts": {
+    "mtime": 1780646488.7216778,
+    "ast_hash": "236e6670b9925fe854ec2b533689ef22",
+    "semantic_hash": "236e6670b9925fe854ec2b533689ef22"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/games/[gameId]/page.tsx": {
+    "mtime": 1780646488.722012,
+    "ast_hash": "90cb762db2d67aba513ef33f192c5626",
+    "semantic_hash": "90cb762db2d67aba513ef33f192c5626"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/games/page.tsx": {
+    "mtime": 1780646488.722325,
+    "ast_hash": "7265aee102f81d10e5de978fa918de79",
+    "semantic_hash": "7265aee102f81d10e5de978fa918de79"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/import/page.tsx": {
+    "mtime": 1780613218.7353816,
+    "ast_hash": "77ceaa3e82dadce0265bfc624a7ff751",
+    "semantic_hash": "77ceaa3e82dadce0265bfc624a7ff751"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/layout.tsx": {
+    "mtime": 1780646488.7229502,
+    "ast_hash": "f197935caf360dfa75302ff5d3368c36",
+    "semantic_hash": "f197935caf360dfa75302ff5d3368c36"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/page.tsx": {
+    "mtime": 1780646488.723265,
+    "ast_hash": "87d85ac3e577fedab9619beca7116c52",
+    "semantic_hash": "87d85ac3e577fedab9619beca7116c52"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/board/AnalysisBoard.tsx": {
+    "mtime": 1780646488.723598,
+    "ast_hash": "b2bb253d554c4f13d8fd0d1d2d4c45a7",
+    "semantic_hash": "b2bb253d554c4f13d8fd0d1d2d4c45a7"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/board/AnalysisLineMoves.tsx": {
+    "mtime": 1780646488.7239068,
+    "ast_hash": "f2eaf94a448402ed1bd28c3c226e1061",
+    "semantic_hash": "f2eaf94a448402ed1bd28c3c226e1061"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/board/MoveList.tsx": {
+    "mtime": 1780646488.7246873,
+    "ast_hash": "6460150ece542a59395a92e5449736d5",
+    "semantic_hash": "6460150ece542a59395a92e5449736d5"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/games/GameCard.tsx": {
+    "mtime": 1780613218.7377706,
+    "ast_hash": "cf782126fcb1d457cebe90d98eb9643b",
+    "semantic_hash": "cf782126fcb1d457cebe90d98eb9643b"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/games/GameReview.tsx": {
+    "mtime": 1780646488.7257175,
+    "ast_hash": "a065b868847a3fcae3772de19253a518",
+    "semantic_hash": "a065b868847a3fcae3772de19253a518"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/games/UserColorBadge.tsx": {
+    "mtime": 1780646488.7260792,
+    "ast_hash": "b8b2425586ef0ade1e47107bbc7f7ec8",
+    "semantic_hash": "b8b2425586ef0ade1e47107bbc7f7ec8"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/import/ChessComImport.tsx": {
+    "mtime": 1780613218.7387202,
+    "ast_hash": "90dff565126f3d9ebc029216acc8a65b",
+    "semantic_hash": "90dff565126f3d9ebc029216acc8a65b"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/import/PgnPasteForm.tsx": {
+    "mtime": 1780613218.7388482,
+    "ast_hash": "6f5efd910bb6c20d4d16ea13780b37a6",
+    "semantic_hash": "6f5efd910bb6c20d4d16ea13780b37a6"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/import/PlayerUsernameField.tsx": {
+    "mtime": 1780613218.738959,
+    "ast_hash": "421cf431cfc5edccb63ffee05e69bce0",
+    "semantic_hash": "421cf431cfc5edccb63ffee05e69bce0"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/layout/Header.tsx": {
+    "mtime": 1780646488.7264276,
+    "ast_hash": "746adb414c74bb04438b94d60de18f3b",
+    "semantic_hash": "746adb414c74bb04438b94d60de18f3b"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/layout/PageContainer.tsx": {
+    "mtime": 1780613218.739378,
+    "ast_hash": "4d54a0e6e834de9446f702a20968e938",
+    "semantic_hash": "4d54a0e6e834de9446f702a20968e938"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/eslint.config.mjs": {
+    "mtime": 1779060719.0209556,
+    "ast_hash": "dfa1f5f6a7037bf39dc510f30b180002",
+    "semantic_hash": "dfa1f5f6a7037bf39dc510f30b180002"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/hooks/useAnalysisSession.ts": {
+    "mtime": 1780646488.727613,
+    "ast_hash": "3af8737a2b86dbf75b594bee276d565c",
+    "semantic_hash": "3af8737a2b86dbf75b594bee276d565c"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/analysisLine.ts": {
+    "mtime": 1780613218.7400134,
+    "ast_hash": "23e4bd90455366be5ddb0684b854f216",
+    "semantic_hash": "23e4bd90455366be5ddb0684b854f216"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/boardStyles.ts": {
+    "mtime": 1780613218.7401798,
+    "ast_hash": "08f97f2dffe674f64e7afc9ed88b7b3c",
+    "semantic_hash": "08f97f2dffe674f64e7afc9ed88b7b3c"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/moveAnnotations.ts": {
+    "mtime": 1780646488.7294192,
+    "ast_hash": "cabdc314ae71856f8ec136d55608e430",
+    "semantic_hash": "cabdc314ae71856f8ec136d55608e430"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/parsePgn.ts": {
+    "mtime": 1780613218.7410355,
+    "ast_hash": "8e8e6c445b98a08b4c151bbe7a942d28",
+    "semantic_hash": "8e8e6c445b98a08b4c151bbe7a942d28"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/resolveUserColor.ts": {
+    "mtime": 1780613218.741183,
+    "ast_hash": "fdf85d0fd4f8718e1dd631b12d314554",
+    "semantic_hash": "fdf85d0fd4f8718e1dd631b12d314554"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chesscom/api.ts": {
+    "mtime": 1780613218.74146,
+    "ast_hash": "af2d66acd2bc32729a49b1c0bb7d6797",
+    "semantic_hash": "af2d66acd2bc32729a49b1c0bb7d6797"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/supabase/client.ts": {
+    "mtime": 1780613218.744429,
+    "ast_hash": "e76539ee5a8a6cd309f84e2e1df8d7e5",
+    "semantic_hash": "e76539ee5a8a6cd309f84e2e1df8d7e5"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/supabase/games.ts": {
+    "mtime": 1780646488.73093,
+    "ast_hash": "b3911679ff6402adc15e25cee4ea16ae",
+    "semantic_hash": "b3911679ff6402adc15e25cee4ea16ae"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/supabase/server.ts": {
+    "mtime": 1780613218.7449026,
+    "ast_hash": "303763367ecbc6997dbfb6bdac8ac91f",
+    "semantic_hash": "303763367ecbc6997dbfb6bdac8ac91f"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/user/playerUsername.ts": {
+    "mtime": 1780613218.7451682,
+    "ast_hash": "b9ee66cfd79572007676ec230e7b78c2",
+    "semantic_hash": "b9ee66cfd79572007676ec230e7b78c2"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/next.config.ts": {
+    "mtime": 1779060719.0210993,
+    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "semantic_hash": "9b77af189a21a7a64e4bd7a426f64176"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/package.json": {
+    "mtime": 1780613218.7479596,
+    "ast_hash": "073f0db992b9f8082e933e87b4d13bad",
+    "semantic_hash": "073f0db992b9f8082e933e87b4d13bad"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/postcss.config.mjs": {
+    "mtime": 1779060719.0223215,
+    "ast_hash": "239f3ebf717465dc636818a1a619398d",
+    "semantic_hash": "239f3ebf717465dc636818a1a619398d"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/supabase/migrations/20240520000000_initial.sql": {
+    "mtime": 1780613218.7482886,
+    "ast_hash": "a2e46996732aa02942b52e05048da0e3",
+    "semantic_hash": "a2e46996732aa02942b52e05048da0e3"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/supabase/migrations/20240520100000_game_user_color.sql": {
+    "mtime": 1780613218.7485032,
+    "ast_hash": "7cb0a4dc12b1ca78df49b8e86b0f54c1",
+    "semantic_hash": "7cb0a4dc12b1ca78df49b8e86b0f54c1"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/tsconfig.json": {
+    "mtime": 1779060719.0238917,
+    "ast_hash": "02fc19ad21338c2ab820a70136310db4",
+    "semantic_hash": "02fc19ad21338c2ab820a70136310db4"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/types/annotations.ts": {
+    "mtime": 1780646488.7318444,
+    "ast_hash": "a7e4e400432e9c531011c781469b3a91",
+    "semantic_hash": "a7e4e400432e9c531011c781469b3a91"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/types/chess.ts": {
+    "mtime": 1779060844.6148407,
+    "ast_hash": "175db26bc58c516d44b78e37578271a8",
+    "semantic_hash": "175db26bc58c516d44b78e37578271a8"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/types/database.ts": {
+    "mtime": 1779060846.0553846,
+    "ast_hash": "e00b8d98a5d0666f747c5ed9a9d8dd85",
+    "semantic_hash": "e00b8d98a5d0666f747c5ed9a9d8dd85"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/types/index.ts": {
+    "mtime": 1780646488.732537,
+    "ast_hash": "1c96b092fd39926717f432f43fe08bf5",
+    "semantic_hash": "1c96b092fd39926717f432f43fe08bf5"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/AGENTS.md": {
+    "mtime": 1779060719.019604,
+    "ast_hash": "9e09241799026ac05be315a2f0b50055",
+    "semantic_hash": "9e09241799026ac05be315a2f0b50055"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/CLAUDE.md": {
+    "mtime": 1779060719.0197544,
+    "ast_hash": "5c27369b226fcf2be8a6cfe52224e767",
+    "semantic_hash": "5c27369b226fcf2be8a6cfe52224e767"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/README.md": {
+    "mtime": 1780646488.7210069,
+    "ast_hash": "eef3ad5a67f672b93eea2f6b1d839860",
+    "semantic_hash": "eef3ad5a67f672b93eea2f6b1d839860"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/public/file.svg": {
+    "mtime": 1779060719.0225658,
+    "ast_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71",
+    "semantic_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/public/globe.svg": {
+    "mtime": 1779060719.0227292,
+    "ast_hash": "2aaafa6a49b6563925fe440891e32717",
+    "semantic_hash": "2aaafa6a49b6563925fe440891e32717"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/public/next.svg": {
+    "mtime": 1779060719.0228915,
+    "ast_hash": "8e061864f388b47f33a1c3780831193e",
+    "semantic_hash": "8e061864f388b47f33a1c3780831193e"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/public/vercel.svg": {
+    "mtime": 1779060719.0230403,
+    "ast_hash": "c0af2f507b369b085b35ef4bbe3bcf1e",
+    "semantic_hash": "c0af2f507b369b085b35ef4bbe3bcf1e"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/public/window.svg": {
+    "mtime": 1779060719.0231905,
+    "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": "a2760511c65806022ad20adf74370ff3"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/app/api/eval/route.ts": {
+    "mtime": 1780646488.721344,
+    "ast_hash": "c9f1e8feb91ca999369e79160309a849",
+    "semantic_hash": "c9f1e8feb91ca999369e79160309a849"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/board/ChessBoardWithEval.tsx": {
+    "mtime": 1780646488.7241366,
+    "ast_hash": "adc4549f674fcea7e7ec8997058523c4",
+    "semantic_hash": "adc4549f674fcea7e7ec8997058523c4"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/board/EvalBar.tsx": {
+    "mtime": 1780646488.724369,
+    "ast_hash": "935e84ff99d7c148617fc5a2027a298a",
+    "semantic_hash": "935e84ff99d7c148617fc5a2027a298a"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/games/EngineMovesPanel.tsx": {
+    "mtime": 1780646488.724935,
+    "ast_hash": "5e2c832bb2dbdf868ea8e69bcc6dd2c3",
+    "semantic_hash": "5e2c832bb2dbdf868ea8e69bcc6dd2c3"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/theme/ThemeProvider.tsx": {
+    "mtime": 1780646488.7268207,
+    "ast_hash": "5ed09c1687a3a9c9f2da093abf77e56d",
+    "semantic_hash": "5ed09c1687a3a9c9f2da093abf77e56d"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/components/theme/ThemeToggle.tsx": {
+    "mtime": 1780646488.7270665,
+    "ast_hash": "1fe420e2283b5a02621b9c15df7dca51",
+    "semantic_hash": "1fe420e2283b5a02621b9c15df7dca51"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/hooks/useLiveEngineEval.ts": {
+    "mtime": 1780646488.7279506,
+    "ast_hash": "e9902efc419512b244fbb04952046b81",
+    "semantic_hash": "e9902efc419512b244fbb04952046b81"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/analysis/perspective.ts": {
+    "mtime": 1780646488.7282796,
+    "ast_hash": "a8d17601ed39bb05eece4185d8e568de",
+    "semantic_hash": "a8d17601ed39bb05eece4185d8e568de"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/analysis/service.ts": {
+    "mtime": 1780646488.728627,
+    "ast_hash": "1a2eeb2aac197d55dd4d4a42aba1df59",
+    "semantic_hash": "1a2eeb2aac197d55dd4d4a42aba1df59"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/boardState.ts": {
+    "mtime": 1780646488.7288733,
+    "ast_hash": "228e0fe6a5841bec194b4b862fb55469",
+    "semantic_hash": "228e0fe6a5841bec194b4b862fb55469"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/evalBar.ts": {
+    "mtime": 1780646488.7291055,
+    "ast_hash": "dd2ebeb47ce5d6714cbbbce2248bb280",
+    "semantic_hash": "dd2ebeb47ce5d6714cbbbce2248bb280"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/chess/uci.ts": {
+    "mtime": 1780646488.7296472,
+    "ast_hash": "7b1ce58c5f69eaaa9c5cd67440789272",
+    "semantic_hash": "7b1ce58c5f69eaaa9c5cd67440789272"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/engine/normalizeScore.ts": {
+    "mtime": 1780646488.7299643,
+    "ast_hash": "398defa95e5c33120f3e93d2ab6c7042",
+    "semantic_hash": "398defa95e5c33120f3e93d2ab6c7042"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/engine/stockfish.ts": {
+    "mtime": 1780646488.730307,
+    "ast_hash": "641d29c03377b46a728c554c18b96bfb",
+    "semantic_hash": "641d29c03377b46a728c554c18b96bfb"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/lib/supabase/analysis.ts": {
+    "mtime": 1780646488.7305913,
+    "ast_hash": "e5f5e5cfa6b42ba18f102a49044734d7",
+    "semantic_hash": "e5f5e5cfa6b42ba18f102a49044734d7"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/supabase/migrations/20260526211000_analysis_v2.sql": {
+    "mtime": 1780646488.7312753,
+    "ast_hash": "b8f4180eaf167d4aaea974b9a04e0579",
+    "semantic_hash": "b8f4180eaf167d4aaea974b9a04e0579"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/types/analysis.ts": {
+    "mtime": 1780646488.731526,
+    "ast_hash": "3e843a7a2d46ec85a57cb244ab774be3",
+    "semantic_hash": "3e843a7a2d46ec85a57cb244ab774be3"
+  },
+  "/Users/nickmarietta/Dev/chess-tutor/chess-tutor/types/engineEval.ts": {
+    "mtime": 1780646488.7320728,
+    "ast_hash": "e55ad024b35858c2c070958a4616e71c",
+    "semantic_hash": "e55ad024b35858c2c070958a4616e71c"
+  }
+}
