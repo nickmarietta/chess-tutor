@@ -43,6 +43,9 @@ const emptyEval = (boardFen: string): LiveEngineEval => ({
   evalWhite: null,
   scoreType: null,
   convertedFromSideToMove: false,
+  bestMoveUci: null,
+  bestMoveSan: null,
+  candidateMoves: [],
   errorMessage: null,
 });
 
@@ -72,6 +75,9 @@ export function useLiveEngineEval(board: BoardChessState): LiveEngineEval {
       evalWhite: null,
       scoreType: null,
       convertedFromSideToMove: false,
+      bestMoveUci: null,
+      bestMoveSan: null,
+      candidateMoves: [],
       errorMessage: null,
     });
 
@@ -103,9 +109,7 @@ export function useLiveEngineEval(board: BoardChessState): LiveEngineEval {
           return;
         }
 
-        const data = (await res.json()) as EngineEvalApiResponse & {
-          evalWhite?: number;
-        };
+        const data = (await res.json()) as EngineEvalApiResponse & { evalWhite?: number };
         const evaluatedFen = normalizeFen(data.fen);
         const currentFen = normalizeFen(board.fen);
 
@@ -138,6 +142,9 @@ export function useLiveEngineEval(board: BoardChessState): LiveEngineEval {
           evalWhite,
           scoreType: data.scoreType,
           convertedFromSideToMove: data.convertedFromSideToMove,
+          bestMoveUci: data.bestMoveUci,
+          bestMoveSan: data.bestMoveSan,
+          candidateMoves: data.candidateMoves,
           errorMessage: null,
         });
 

@@ -1,17 +1,19 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { AnalysisLineMoves } from "@/components/board/AnalysisLineMoves";
 import { ChessBoardWithEval } from "@/components/board/ChessBoardWithEval";
 import { MoveList } from "@/components/board/MoveList";
 import { EngineMovesPanel } from "@/components/games/EngineMovesPanel";
 import { UserColorBadge } from "@/components/games/UserColorBadge";
+import { DebugPanel } from "@/components/debug/DebugPanel";
 import {
   displayableEval,
   useLiveEngineEval,
 } from "@/hooks/useLiveEngineEval";
 import { useAnalysisSession } from "@/hooks/useAnalysisSession";
 import type { Game, MoveAnalysis, Position, UserColor } from "@/types";
+import type { BoardAnnotations } from "@/types/annotations";
 
 type GameReviewProps = {
   game: Game;
@@ -49,6 +51,52 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
   const board = viewState.board;
   const liveEngineEval = useLiveEngineEval(board);
   const barEval = displayableEval(board, liveEngineEval);
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const suggestionAnnotations = useMemo((): BoardAnnotations | null => {
+    if (!showSuggestions) return null;
+    const arrows: BoardAnnotations["arrows"] = [];
+
+    if (analysisMode) {
+      // Use live engine best move — only when eval is confirmed for the current FEN.
+      if (liveEngineEval.status !== "ready" || !liveEngineEval.bestMoveUci) return null;
+      const bestUci = liveEngineEval.bestMoveUci;
+      if (bestUci.length >= 4) {
+        arrows.push({ from: bestUci.slice(0, 2), to: bestUci.slice(2, 4), type: "best" });
+      }
+      for (const c of liveEngineEval.candidateMoves) {
+        if (!c.uci || c.uci === bestUci || c.uci.length < 4) continue;
+        arrows.push({ from: c.uci.slice(0, 2), to: c.uci.slice(2, 4), type: "idea" });
+      }
+    } else {
+      // Use cached analysis from import.
+      if (!selectedAnalysis) return null;
+      const bestUci = selectedAnalysis.best_move_uci;
+      if (bestUci && bestUci.length >= 4) {
+        arrows.push({ from: bestUci.slice(0, 2), to: bestUci.slice(2, 4), type: "best" });
+      }
+      for (const c of selectedAnalysis.candidate_moves) {
+        if (!c.uci || c.uci === bestUci || c.uci.length < 4) continue;
+        arrows.push({ from: c.uci.slice(0, 2), to: c.uci.slice(2, 4), type: "idea" });
+      }
+    }
+
+    return arrows.length > 0 ? { highlights: [], arrows } : null;
+  }, [showSuggestions, analysisMode, liveEngineEval, selectedAnalysis]);
+
+  // Hold the last confirmed eval so the bar doesn't snap to center while loading.
+  const lastBarEvalRef = useRef<{ evalWhite: number | null; scoreType: "cp" | "mate" | null }>({
+    evalWhite: null,
+    scoreType: null,
+  });
+  if (barEval.status === "ready" && barEval.evalWhite !== null) {
+    lastBarEvalRef.current = { evalWhite: barEval.evalWhite, scoreType: barEval.scoreType };
+  }
+  const displayEvalWhite =
+    barEval.status === "loading" ? lastBarEvalRef.current.evalWhite : barEval.evalWhite;
+  const displayScoreType =
+    barEval.status === "loading" ? lastBarEvalRef.current.scoreType : barEval.scoreType;
 
   const handleSelectPly = useCallback(
     (ply: number) => {
@@ -125,9 +173,10 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
             orientation={boardOrientation}
             interactive={analysisMode}
             onMove={handleBoardMove}
-            evalWhite={barEval.evalWhite}
-            scoreType={barEval.scoreType}
+            evalWhite={displayEvalWhite}
+            scoreType={displayScoreType}
             evalStatus={barEval.status}
+            annotations={suggestionAnnotations}
           />
 
           <p className="text-sm text-[var(--text-muted)]">{viewState.label}</p>
@@ -150,6 +199,17 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
               disabled={!viewState.canStepForward}
               onClick={stepForward}
             />
+            <button
+              type="button"
+              onClick={() => setShowSuggestions((v) => !v)}
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                showSuggestions
+                  ? "border-green-700 bg-green-700/10 text-green-500"
+                  : "border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
+              }`}
+            >
+              {showSuggestions ? "Hide suggestions" : "Show suggestions"}
+            </button>
             {analysisMode && (
               <button
                 type="button"
@@ -169,6 +229,15 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
           </div>
         </section>
       </div>
+
+      {process.env.NODE_ENV === "development" && (
+        <DebugPanel
+          board={board}
+          liveEval={liveEngineEval}
+          userColor={gameState.user_color}
+          cachedAnalysis={selectedAnalysis}
+        />
+      )}
     </div>
   );
 }

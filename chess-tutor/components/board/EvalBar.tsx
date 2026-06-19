@@ -23,7 +23,10 @@ export function EvalBar({
   orientation = "white",
   className = "",
 }: EvalBarProps) {
-  const canShowEval = status === "ready" && evalWhite !== null;
+  const hasEval = evalWhite !== null;
+  const canShowEval = hasEval;
+  // True when showing a stale (previous-position) eval while a new one loads.
+  const isStale = status === "loading" && hasEval;
   const chances = canShowEval
     ? evalToWhiteWinningChances(evalWhite, scoreType)
     : 0;
@@ -53,7 +56,7 @@ export function EvalBar({
     >
       {canShowEval && (
         <div
-          className="absolute inset-x-0 bg-[var(--eval-white,#f4f4f4)] transition-[height] duration-300 ease-out"
+          className={`absolute inset-x-0 bg-[var(--eval-white,#f4f4f4)] transition-[height,opacity] duration-300 ease-out ${isStale ? "opacity-50" : "opacity-100"}`}
           style={
             fillFromBottom
               ? { bottom: 0, height: whitePct }
@@ -66,8 +69,8 @@ export function EvalBar({
           {orientation === "white" ? "♚" : "♔"}
         </span>
         <span
-          className={`px-0.5 text-center text-[10px] font-semibold leading-tight tabular-nums ${
-            canShowEval ? "text-[var(--text)]" : "text-[var(--text-subtle)]"
+          className={`px-0.5 text-center text-[10px] font-semibold leading-tight tabular-nums transition-opacity duration-300 ${
+            isStale ? "opacity-50 text-[var(--text)]" : canShowEval ? "text-[var(--text)]" : "text-[var(--text-subtle)]"
           }`}
           style={{ textShadow: "0 0 4px var(--surface)" }}
         >

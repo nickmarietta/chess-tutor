@@ -1,3 +1,5 @@
+import type { CandidateMove } from "@/types/analysis";
+
 export type EngineEvalApiResponse = {
   fen: string;
   sideToMove: "white" | "black";
@@ -6,6 +8,9 @@ export type EngineEvalApiResponse = {
   mateIn: number | null;
   scoreType: "cp" | "mate";
   convertedFromSideToMove: boolean;
+  bestMoveUci: string | null;
+  bestMoveSan: string | null;
+  candidateMoves: CandidateMove[];
   error?: string;
 };
 
@@ -21,5 +26,8 @@ export type LiveEngineEval = {
   evalWhite: number | null;
   scoreType: "cp" | "mate" | null;
   convertedFromSideToMove: boolean;
+  bestMoveUci: string | null;
+  bestMoveSan: string | null;
+  candidateMoves: CandidateMove[];
   errorMessage: string | null;
 };

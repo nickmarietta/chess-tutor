@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   try {
     const result = await analyzePositionWithStockfish(normalizedFen, {
       depth: 14,
-      multiPv: 1,
+      multiPv: 3,
     });
 
     if (!result.normalized) {
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
       mateIn: n.mateIn,
       scoreType: n.scoreType,
       convertedFromSideToMove: n.convertedFromSideToMove,
+      bestMoveUci: result.bestMoveUci,
+      bestMoveSan: result.bestMoveSan,
+      candidateMoves: result.candidateMoves,
     };
 
     return NextResponse.json({

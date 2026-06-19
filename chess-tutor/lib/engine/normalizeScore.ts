@@ -38,7 +38,8 @@ export function normalizeScoreToWhite(
 
   if (!assumeWhitePositive) {
     whiteValue = stmIsWhite ? raw.value : -raw.value;
-    convertedFromSideToMove = true;
+    // conversion only happens when Black is to move (score is flipped)
+    convertedFromSideToMove = !stmIsWhite;
   }
 
   if (raw.type === "mate") {
