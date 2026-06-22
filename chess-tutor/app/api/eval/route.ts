@@ -43,6 +43,7 @@ export async function POST(request: Request) {
       convertedFromSideToMove: n.convertedFromSideToMove,
       bestMoveUci: result.bestMoveUci,
       bestMoveSan: result.bestMoveSan,
+      engineLine: result.engineLine,
       candidateMoves: result.candidateMoves,
     };
 

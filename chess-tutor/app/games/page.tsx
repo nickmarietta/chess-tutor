@@ -19,8 +19,8 @@ export default async function GamesPage() {
     <PageContainer>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-stone-900">My games</h1>
-          <p className="mt-1 text-stone-600">
+          <h1 className="text-3xl font-bold text-[var(--text)]">My games</h1>
+          <p className="mt-1 text-[var(--text-muted)]">
             Games you have imported for review.
           </p>
         </div>
@@ -33,22 +33,22 @@ export default async function GamesPage() {
       </div>
 
       {error && (
-        <div className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          <p className="font-medium">Database not configured</p>
-          <p className="mt-1 text-amber-800">{error}</p>
-          <p className="mt-2 text-amber-700">
+        <div className="mt-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--text-muted)]">
+          <p className="font-medium text-[var(--text)]">Database not configured</p>
+          <p className="mt-1">{error}</p>
+          <p className="mt-2 text-[var(--text-subtle)]">
             Add Supabase env vars and run the migration in{" "}
-            <code className="rounded bg-amber-100 px-1">supabase/migrations</code>.
+            <code className="rounded bg-[var(--surface-hover)] px-1">supabase/migrations</code>.
           </p>
         </div>
       )}
 
       {!error && games.length === 0 && (
-        <div className="mt-12 rounded-2xl border border-dashed border-stone-300 bg-white p-12 text-center">
-          <p className="text-stone-600">No games yet.</p>
+        <div className="mt-12 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-12 text-center">
+          <p className="text-[var(--text-muted)]">No games yet.</p>
           <Link
             href="/import"
-            className="mt-4 inline-block text-sm font-semibold text-amber-700 hover:text-amber-800"
+            className="mt-4 inline-block text-sm font-semibold text-[var(--text)] hover:text-[var(--text-muted)]"
           >
             Import your first game →
           </Link>

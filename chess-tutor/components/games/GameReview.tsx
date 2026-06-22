@@ -164,6 +164,8 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
             analysis={selectedAnalysis}
             analyses={analyses}
             userColor={gameState.user_color}
+            analysisMode={analysisMode}
+            liveEval={liveEngineEval}
           />
         </aside>
 

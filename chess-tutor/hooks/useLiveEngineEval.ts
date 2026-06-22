@@ -45,6 +45,7 @@ const emptyEval = (boardFen: string): LiveEngineEval => ({
   convertedFromSideToMove: false,
   bestMoveUci: null,
   bestMoveSan: null,
+  engineLine: [],
   candidateMoves: [],
   errorMessage: null,
 });
@@ -77,6 +78,7 @@ export function useLiveEngineEval(board: BoardChessState): LiveEngineEval {
       convertedFromSideToMove: false,
       bestMoveUci: null,
       bestMoveSan: null,
+      engineLine: [],
       candidateMoves: [],
       errorMessage: null,
     });
@@ -144,6 +146,7 @@ export function useLiveEngineEval(board: BoardChessState): LiveEngineEval {
           convertedFromSideToMove: data.convertedFromSideToMove,
           bestMoveUci: data.bestMoveUci,
           bestMoveSan: data.bestMoveSan,
+          engineLine: data.engineLine,
           candidateMoves: data.candidateMoves,
           errorMessage: null,
         });

@@ -1,4 +1,4 @@
-import type { CandidateMove } from "@/types/analysis";
+import type { CandidateMove, EngineLineMove } from "@/types/analysis";
 
 export type EngineEvalApiResponse = {
   fen: string;
@@ -10,6 +10,7 @@ export type EngineEvalApiResponse = {
   convertedFromSideToMove: boolean;
   bestMoveUci: string | null;
   bestMoveSan: string | null;
+  engineLine: EngineLineMove[];
   candidateMoves: CandidateMove[];
   error?: string;
 };
@@ -28,6 +29,7 @@ export type LiveEngineEval = {
   convertedFromSideToMove: boolean;
   bestMoveUci: string | null;
   bestMoveSan: string | null;
+  engineLine: EngineLineMove[];
   candidateMoves: CandidateMove[];
   errorMessage: string | null;
 };

@@ -29,19 +29,6 @@ export function getParentNode(line: AnalysisLine): AnalysisNode | null {
   return line.nodes[line.cursor - 1] ?? null;
 }
 
-export function isAnalysisBranch(line: AnalysisLine, gamePositions: { ply: number; move_san: string | null }[]): boolean {
-  if (line.nodes.length <= 1) return false;
-
-  for (let i = 1; i < line.nodes.length; i++) {
-    const node = line.nodes[i]!;
-    const expectedGamePly = line.anchorPly + i;
-    const gameMove = gamePositions.find((p) => p.ply === expectedGamePly);
-    if (!gameMove?.move_san || gameMove.move_san !== node.moveSan) {
-      return true;
-    }
-  }
-  return line.cursor < line.nodes.length - 1 && line.nodes.length > 1;
-}
 
 export function tryMove(
   fen: string,

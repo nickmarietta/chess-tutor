@@ -93,45 +93,19 @@ export async function upsertUserMistakeStats(
 
   const supabase = createServerClient();
 
-  for (const row of rows) {
-    let query = supabase
-      .from("user_mistake_stats")
-      .select("*")
-      .eq("mistake_tag", row.mistakeTag)
-      .limit(1);
-
-    query = row.userId ? query.eq("user_id", row.userId) : query.is("user_id", null);
-    query = row.playerKey
-      ? query.eq("player_key", row.playerKey)
-      : query.is("player_key", null);
-
-    const { data: existing, error: selectError } = await query.maybeSingle();
-    if (selectError) throw new Error(selectError.message);
-
-    if (existing) {
-      const { error: updateError } = await supabase
-        .from("user_mistake_stats")
-        .update({
-          count: (existing.count as number) + row.count,
-          last_seen_at: row.lastSeenAt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existing.id);
-
-      if (updateError) throw new Error(updateError.message);
-      continue;
-    }
-
-    const { error: insertError } = await supabase.from("user_mistake_stats").insert({
+  // Single RPC call — the SQL function handles atomic increments via
+  // ON CONFLICT against the coalesce expression index.
+  const { error } = await supabase.rpc("upsert_mistake_stats", {
+    p_stats: rows.map((row) => ({
       user_id: row.userId ?? null,
       player_key: row.playerKey ?? null,
       mistake_tag: row.mistakeTag,
       count: row.count,
       last_seen_at: row.lastSeenAt,
-    });
+    })),
+  });
 
-    if (insertError) throw new Error(insertError.message);
-  }
+  if (error) throw new Error(error.message);
 }
 
 export type { UserMistakeStat };
