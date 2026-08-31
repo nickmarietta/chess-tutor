@@ -72,6 +72,32 @@ describe("renderDeterministicExplanation", () => {
     expect(text).not.toContain("preferred");
   });
 
+  it("mentions other candidate lines beyond the best move", () => {
+    const text = render({
+      move_played_san: "Nf6",
+      best_move_san: "d5",
+      candidate_moves: [
+        { san: "d5", uci: "d7d5", score: 0.4, scoreType: "cp" },
+        { san: "e6", uci: "e7e6", score: 0.3, scoreType: "cp" },
+      ],
+    });
+    expect(text).toContain("e6 were also worth considering.");
+  });
+
+  it("omits candidates that duplicate the best move or the move played", () => {
+    const text = render({
+      move_played_san: "e4",
+      best_move_san: "e4",
+      candidate_moves: [{ san: "e4", uci: "e2e4", score: 0.2, scoreType: "cp" }],
+    });
+    expect(text).not.toContain("worth considering");
+  });
+
+  it("omits the candidate sentence when there are none", () => {
+    const text = render({ candidate_moves: [] });
+    expect(text).not.toContain("worth considering");
+  });
+
   it("falls back to a generic subject when no move was played", () => {
     const text = render({ move_played_san: null, mistake_severity: "none" });
     expect(text).toContain("This move holds the position.");

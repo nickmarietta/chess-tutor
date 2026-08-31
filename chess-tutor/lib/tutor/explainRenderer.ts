@@ -53,6 +53,18 @@ function bestMoveSentence(brief: EngineBrief): string | null {
   return `The engine preferred ${brief.bestMoveSan} instead.`;
 }
 
+function otherCandidateSentence(brief: EngineBrief): string | null {
+  const alternatives = brief.candidateMoves
+    .map((candidate) => candidate.san)
+    .filter(
+      (san): san is string =>
+        san !== null && san !== brief.bestMoveSan && san !== brief.movePlayedSan,
+    );
+
+  if (alternatives.length === 0) return null;
+  return `${alternatives.join(" and ")} were also worth considering.`;
+}
+
 /**
  * Turns an engine brief into plain-language prose with zero LLM involvement.
  * This is the always-available floor: never persisted, and used as the
@@ -64,6 +76,7 @@ export function renderDeterministicExplanation(brief: EngineBrief): string {
     evalSentence(brief),
     mistakeTagSentence(brief),
     bestMoveSentence(brief),
+    otherCandidateSentence(brief),
   ].filter((sentence): sentence is string => sentence !== null);
 
   return sentences.join(" ");

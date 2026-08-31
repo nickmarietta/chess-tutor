@@ -5,6 +5,9 @@ import type { MoveAnalysis } from "@/types";
  * Hashes the engine-derived fields of a move analysis so cached tutor output
  * can be invalidated whenever re-analysis (e.g. a depth bump) changes them,
  * without tracking a separate analysis-pipeline version number.
+ *
+ * Deliberately a superset of buildEngineBrief's fields (./engineBrief): if a
+ * brief field starts being rendered, make sure it's covered here too.
  */
 export function computeAnalysisHash(analysis: MoveAnalysis): string {
   const canonical = JSON.stringify({

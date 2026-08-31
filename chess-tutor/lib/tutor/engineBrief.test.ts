@@ -33,6 +33,14 @@ describe("buildEngineBrief", () => {
     });
   });
 
+  it.each(["none", "inaccuracy", "mistake", "blunder"] as const)(
+    "carries the %s severity straight through",
+    (severity) => {
+      const brief = buildEngineBrief(makeMoveAnalysis({ mistake_severity: severity }));
+      expect(brief.severity).toBe(severity);
+    },
+  );
+
   it("passes through null fields untouched", () => {
     const analysis = makeMoveAnalysis({
       move_played_san: null,
