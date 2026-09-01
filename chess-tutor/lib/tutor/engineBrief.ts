@@ -9,6 +9,7 @@ import type {
 export type EngineBrief = {
   sideToMove: UserColor;
   movePlayedSan: string | null;
+  movePlayedUci: string | null;
   bestMoveSan: string | null;
   bestMoveUci: string | null;
   evalBefore: number | null;
@@ -34,6 +35,7 @@ export function buildEngineBrief(analysis: MoveAnalysis): EngineBrief {
   return {
     sideToMove: analysis.side_to_move,
     movePlayedSan: analysis.move_played_san,
+    movePlayedUci: analysis.move_played_uci,
     bestMoveSan: analysis.best_move_san,
     bestMoveUci: analysis.best_move_uci,
     evalBefore: analysis.eval_before,

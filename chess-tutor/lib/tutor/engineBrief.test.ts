@@ -7,6 +7,7 @@ describe("buildEngineBrief", () => {
     const analysis = makeMoveAnalysis({
       side_to_move: "black",
       move_played_san: "Nf6",
+      move_played_uci: "g8f6",
       best_move_san: "d5",
       best_move_uci: "d7d5",
       eval_before: 0.4,
@@ -21,6 +22,7 @@ describe("buildEngineBrief", () => {
     expect(buildEngineBrief(analysis)).toEqual({
       sideToMove: "black",
       movePlayedSan: "Nf6",
+      movePlayedUci: "g8f6",
       bestMoveSan: "d5",
       bestMoveUci: "d7d5",
       evalBefore: 0.4,
@@ -44,6 +46,7 @@ describe("buildEngineBrief", () => {
   it("passes through null fields untouched", () => {
     const analysis = makeMoveAnalysis({
       move_played_san: null,
+      move_played_uci: null,
       best_move_san: null,
       best_move_uci: null,
       eval_before: null,
@@ -54,6 +57,7 @@ describe("buildEngineBrief", () => {
     const brief = buildEngineBrief(analysis);
 
     expect(brief.movePlayedSan).toBeNull();
+    expect(brief.movePlayedUci).toBeNull();
     expect(brief.bestMoveSan).toBeNull();
     expect(brief.bestMoveUci).toBeNull();
     expect(brief.evalBefore).toBeNull();

@@ -1,7 +1,7 @@
 import { Chess } from "chess.js";
 import type { EngineLineMove } from "@/types";
 
-function splitUci(uci: string) {
+export function splitUci(uci: string) {
   return {
     from: uci.slice(0, 2),
     to: uci.slice(2, 4),
