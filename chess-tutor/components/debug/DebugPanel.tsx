@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { normalizeFen, type BoardChessState } from "@/lib/chess/boardState";
+import { buildEngineBrief } from "@/lib/tutor/engineBrief";
+import { renderDeterministicExplanation } from "@/lib/tutor/explainRenderer";
 import type { LiveEngineEval } from "@/types/engineEval";
 import type { MoveAnalysis, UserColor } from "@/types";
 
@@ -113,6 +115,10 @@ export function DebugPanel({
     liveEval.evalWhite !== null
       ? `${liveEval.evalWhite > 0 ? "+" : ""}${liveEval.evalWhite.toFixed(2)} pawns (White)`
       : "—";
+
+  const deterministicExplanation = cachedAnalysis
+    ? renderDeterministicExplanation(buildEngineBrief(cachedAnalysis))
+    : null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50 w-[440px] max-h-[72vh] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] font-mono text-[11px] shadow-2xl">
@@ -249,10 +255,12 @@ export function DebugPanel({
               </Section>
             )}
 
-            <Section title="Tutor context (not yet wired)">
-              <Row label="FEN for tutor" value="—" />
-              <Row label="Legal moves sent" value="—" />
-              <Row label="Payload" value="—" />
+            <Section title="Deterministic explanation (no LLM)">
+              <Row
+                label="Text"
+                value={deterministicExplanation ?? "no move analysis for this position"}
+                mono={false}
+              />
             </Section>
           </div>
         </div>
