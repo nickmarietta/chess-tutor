@@ -12,6 +12,8 @@ import {
   useLiveEngineEval,
 } from "@/hooks/useLiveEngineEval";
 import { useAnalysisSession } from "@/hooks/useAnalysisSession";
+import { buildBoardAnnotations } from "@/lib/tutor/boardAnnotations";
+import { buildEngineBrief } from "@/lib/tutor/engineBrief";
 import type { Game, MoveAnalysis, Position, UserColor } from "@/types";
 import type { BoardAnnotations } from "@/types/annotations";
 
@@ -84,6 +86,26 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
 
     return arrows.length > 0 ? { highlights: [], arrows } : null;
   }, [showSuggestions, analysisMode, liveEngineEval, selectedAnalysis]);
+
+  const mistakeAnnotations = useMemo((): BoardAnnotations | null => {
+    if (!selectedAnalysis) return null;
+    const result = buildBoardAnnotations(buildEngineBrief(selectedAnalysis));
+    return result.highlights.length > 0 || result.arrows.length > 0 ? result : null;
+  }, [selectedAnalysis]);
+
+  const boardAnnotations = useMemo((): BoardAnnotations | null => {
+    if (!mistakeAnnotations && !suggestionAnnotations) return null;
+    return {
+      highlights: [
+        ...(mistakeAnnotations?.highlights ?? []),
+        ...(suggestionAnnotations?.highlights ?? []),
+      ],
+      arrows: [
+        ...(mistakeAnnotations?.arrows ?? []),
+        ...(suggestionAnnotations?.arrows ?? []),
+      ],
+    };
+  }, [mistakeAnnotations, suggestionAnnotations]);
 
   // Hold the last confirmed eval so the bar doesn't snap to center while loading.
   const lastBarEvalRef = useRef<{ evalWhite: number | null; scoreType: "cp" | "mate" | null }>({
@@ -178,7 +200,7 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
             evalWhite={displayEvalWhite}
             scoreType={displayScoreType}
             evalStatus={barEval.status}
-            annotations={suggestionAnnotations}
+            annotations={boardAnnotations}
           />
 
           <p className="text-sm text-[var(--text-muted)]">{viewState.label}</p>
