@@ -50,24 +50,48 @@ describe("buildBoardAnnotations", () => {
     expect(result.arrows).toEqual([]);
   });
 
-  it.each<[MistakeTag, "target" | "weakness"]>([
+  it.each<[MistakeTag, "target" | "weakness" | "important" | "control"]>([
     ["missed_tactic", "target"],
     ["hanging_piece", "weakness"],
-    ["poor_piece_activity", "weakness"],
     ["bad_trade", "weakness"],
-    ["ignored_opponent_threat", "weakness"],
     ["premature_attack", "weakness"],
-    ["weak_king_safety", "weakness"],
-    ["passive_defense", "weakness"],
     ["opening_principle_violation", "weakness"],
-  ])("highlights the played-move square as %s -> %s", (tag, type) => {
+    ["ignored_opponent_threat", "important"],
+    ["weak_king_safety", "important"],
+    ["poor_piece_activity", "control"],
+    ["passive_defense", "control"],
+  ])("highlights the tag as %s -> %s", (tag, type) => {
     const result = annotationsFor({
       mistake_severity: "mistake",
       move_played_uci: "e7e5",
+      best_move_uci: "e2e4",
       mistake_tags: [tag],
     });
 
-    expect(result.highlights).toContainEqual({ square: "e5", type });
+    const expectedSquare = tag === "missed_tactic" ? "e4" : "e5";
+    expect(result.highlights).toContainEqual({ square: expectedSquare, type });
+  });
+
+  it("anchors missed_tactic on the best move's square, not the move played", () => {
+    const result = annotationsFor({
+      mistake_severity: "blunder",
+      move_played_uci: "e7e5",
+      best_move_uci: "d7d5",
+      mistake_tags: ["missed_tactic"],
+    });
+
+    expect(result.highlights).toContainEqual({ square: "d5", type: "target" });
+  });
+
+  it("falls back to the played square for missed_tactic when no best move is known", () => {
+    const result = annotationsFor({
+      mistake_severity: "blunder",
+      move_played_uci: "e7e5",
+      best_move_uci: null,
+      mistake_tags: ["missed_tactic"],
+    });
+
+    expect(result.highlights).toContainEqual({ square: "e5", type: "target" });
   });
 
   it("adds one highlight per mistake tag present", () => {

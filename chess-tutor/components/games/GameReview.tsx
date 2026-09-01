@@ -12,6 +12,7 @@ import {
   useLiveEngineEval,
 } from "@/hooks/useLiveEngineEval";
 import { useAnalysisSession } from "@/hooks/useAnalysisSession";
+import { splitUci } from "@/lib/chess/uci";
 import { buildBoardAnnotations } from "@/lib/tutor/boardAnnotations";
 import { buildEngineBrief } from "@/lib/tutor/engineBrief";
 import type { Game, MoveAnalysis, Position, UserColor } from "@/types";
@@ -65,22 +66,26 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
       if (liveEngineEval.status !== "ready" || !liveEngineEval.bestMoveUci) return null;
       const bestUci = liveEngineEval.bestMoveUci;
       if (bestUci.length >= 4) {
-        arrows.push({ from: bestUci.slice(0, 2), to: bestUci.slice(2, 4), type: "best" });
+        const best = splitUci(bestUci);
+        arrows.push({ from: best.from, to: best.to, type: "best" });
       }
       for (const c of liveEngineEval.candidateMoves) {
         if (!c.uci || c.uci === bestUci || c.uci.length < 4) continue;
-        arrows.push({ from: c.uci.slice(0, 2), to: c.uci.slice(2, 4), type: "idea" });
+        const move = splitUci(c.uci);
+        arrows.push({ from: move.from, to: move.to, type: "idea" });
       }
     } else {
       // Use cached analysis from import.
       if (!selectedAnalysis) return null;
       const bestUci = selectedAnalysis.best_move_uci;
       if (bestUci && bestUci.length >= 4) {
-        arrows.push({ from: bestUci.slice(0, 2), to: bestUci.slice(2, 4), type: "best" });
+        const best = splitUci(bestUci);
+        arrows.push({ from: best.from, to: best.to, type: "best" });
       }
       for (const c of selectedAnalysis.candidate_moves) {
         if (!c.uci || c.uci === bestUci || c.uci.length < 4) continue;
-        arrows.push({ from: c.uci.slice(0, 2), to: c.uci.slice(2, 4), type: "idea" });
+        const move = splitUci(c.uci);
+        arrows.push({ from: move.from, to: move.to, type: "idea" });
       }
     }
 
@@ -88,10 +93,13 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
   }, [showSuggestions, analysisMode, liveEngineEval, selectedAnalysis]);
 
   const mistakeAnnotations = useMemo((): BoardAnnotations | null => {
-    if (!selectedAnalysis) return null;
+    // selectedAnalysis is pinned to the anchor position, not the board the
+    // user is currently viewing — once analysis mode steps away from the
+    // anchor, its squares no longer correspond to what's on screen.
+    if (analysisMode || !selectedAnalysis) return null;
     const result = buildBoardAnnotations(buildEngineBrief(selectedAnalysis));
     return result.highlights.length > 0 || result.arrows.length > 0 ? result : null;
-  }, [selectedAnalysis]);
+  }, [analysisMode, selectedAnalysis]);
 
   const boardAnnotations = useMemo((): BoardAnnotations | null => {
     if (!mistakeAnnotations && !suggestionAnnotations) return null;

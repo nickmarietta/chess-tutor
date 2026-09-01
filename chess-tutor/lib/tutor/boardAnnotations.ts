@@ -2,16 +2,23 @@ import { splitUci } from "@/lib/chess/uci";
 import type { BoardAnnotations, HighlightType, MistakeTag } from "@/types";
 import type { EngineBrief } from "./engineBrief";
 
+// EngineBrief carries no board/FEN data (by design — see engineBrief.ts), so
+// the only squares available to anchor a highlight on are the move played
+// and the engine's best move. Tags are categorized by the kind of problem
+// they represent rather than pointing at a piece-accurate square, which
+// would need the position itself to compute. missed_tactic is the one tag
+// that gets a more precise anchor: the best move's destination, since that's
+// exactly the square the missed tactic played out on.
 const TAG_HIGHLIGHT_TYPE: Record<MistakeTag, HighlightType> = {
   missed_tactic: "target",
   hanging_piece: "weakness",
-  poor_piece_activity: "weakness",
   bad_trade: "weakness",
-  ignored_opponent_threat: "weakness",
   premature_attack: "weakness",
-  weak_king_safety: "weakness",
-  passive_defense: "weakness",
   opening_principle_violation: "weakness",
+  ignored_opponent_threat: "important",
+  weak_king_safety: "important",
+  poor_piece_activity: "control",
+  passive_defense: "control",
 };
 
 /**
@@ -31,16 +38,17 @@ export function buildBoardAnnotations(brief: EngineBrief): BoardAnnotations {
   const highlights: BoardAnnotations["highlights"] = [];
   const arrows: BoardAnnotations["arrows"] = [];
 
-  if (brief.bestMoveUci && brief.bestMoveUci !== brief.movePlayedUci) {
-    const best = splitUci(brief.bestMoveUci);
+  const best = brief.bestMoveUci ? splitUci(brief.bestMoveUci) : null;
+  const played = brief.movePlayedUci ? splitUci(brief.movePlayedUci) : null;
+
+  if (best && brief.bestMoveUci !== brief.movePlayedUci) {
     arrows.push({ from: best.from, to: best.to, type: "best" });
   }
 
-  if (brief.movePlayedUci) {
-    const played = splitUci(brief.movePlayedUci);
-    for (const tag of brief.mistakeTags) {
-      highlights.push({ square: played.to, type: TAG_HIGHLIGHT_TYPE[tag] });
-    }
+  for (const tag of brief.mistakeTags) {
+    const square = tag === "missed_tactic" && best ? best.to : played?.to;
+    if (!square) continue;
+    highlights.push({ square, type: TAG_HIGHLIGHT_TYPE[tag] });
   }
 
   return { highlights, arrows };
