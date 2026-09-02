@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { tryAcquireAnalysis, releaseAnalysis } from "@/lib/analysis/semaphore";
 import { analyzeGameNow } from "@/lib/analysis/service";
+import { isImportsEnabled } from "@/lib/config/featureFlags";
 import { parsePgn } from "@/lib/chess/parsePgn";
 import { resolveUserColor } from "@/lib/chess/resolveUserColor";
 import { createGameWithPositions, listGames } from "@/lib/supabase/games";
@@ -19,6 +20,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isImportsEnabled()) {
+    return NextResponse.json(
+      { error: "Game imports are currently disabled." },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = (await request.json()) as {
       pgn?: string;
