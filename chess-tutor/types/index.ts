@@ -69,3 +69,8 @@ export type {
   MoveAnalysis,
   UserMistakeStat,
 } from "./analysis";
+export type {
+  CoachExplanation,
+  ExplanationType,
+  HelpMode,
+} from "./tutor";

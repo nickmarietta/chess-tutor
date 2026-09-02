@@ -6,6 +6,7 @@ import { ChessBoardWithEval } from "@/components/board/ChessBoardWithEval";
 import { MoveList } from "@/components/board/MoveList";
 import { EngineMovesPanel } from "@/components/games/EngineMovesPanel";
 import { PlayerStrip, resultForColor } from "@/components/games/PlayerStrip";
+import { TutorExplain } from "@/components/games/TutorExplain";
 import { UserColorBadge } from "@/components/games/UserColorBadge";
 import { DebugPanel } from "@/components/debug/DebugPanel";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -278,6 +279,13 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
         </section>
 
         <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-[var(--border)] bg-[var(--bg)] p-4 lg:border-l lg:border-t-0">
+          {!analysisMode && (
+            <TutorExplain
+              key={selectedAnalysis?.position_id ?? "none"}
+              gameId={gameState.id}
+              positionId={selectedAnalysis?.position_id ?? null}
+            />
+          )}
           <EngineMovesPanel
             analysis={selectedAnalysis}
             analyses={analyses}
