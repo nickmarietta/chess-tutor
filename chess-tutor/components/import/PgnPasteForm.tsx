@@ -47,7 +47,7 @@ export function PgnPasteForm() {
         hint="Must match the White or Black name in the PGN headers."
       />
       <div>
-        <label htmlFor="pgn" className="text-sm font-medium text-stone-700">
+        <label htmlFor="pgn" className="text-sm font-medium text-[var(--text)]">
           Paste PGN
         </label>
         <textarea
@@ -56,16 +56,16 @@ export function PgnPasteForm() {
           value={pgn}
           onChange={(e) => setPgn(e.target.value)}
           placeholder="[Event &quot;?&quot;]&#10;[White &quot;You&quot;]&#10;[Black &quot;Opponent&quot;]&#10;…&#10;1. e4 e5 2. Nf3 …"
-          className="mt-2 w-full resize-y rounded-xl border border-stone-200 bg-white px-3 py-2 font-mono text-sm text-stone-800 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+          className="mt-2 w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-sm text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)]"
         />
       </div>
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{error}</p>
       )}
       <button
         type="submit"
         disabled={loading || !pgn.trim()}
-        className="self-start rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:opacity-60"
+        className="self-start rounded-xl bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-fg)] transition hover:opacity-90 disabled:opacity-60"
       >
         {loading ? "Parsing game…" : "Import and review"}
       </button>

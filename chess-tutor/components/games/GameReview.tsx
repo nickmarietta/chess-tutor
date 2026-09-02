@@ -5,14 +5,18 @@ import { AnalysisLineMoves } from "@/components/board/AnalysisLineMoves";
 import { ChessBoardWithEval } from "@/components/board/ChessBoardWithEval";
 import { MoveList } from "@/components/board/MoveList";
 import { EngineMovesPanel } from "@/components/games/EngineMovesPanel";
+import { PlayerStrip, resultForColor } from "@/components/games/PlayerStrip";
 import { UserColorBadge } from "@/components/games/UserColorBadge";
 import { DebugPanel } from "@/components/debug/DebugPanel";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import {
   displayableEval,
   useLiveEngineEval,
 } from "@/hooks/useLiveEngineEval";
 import { useAnalysisSession } from "@/hooks/useAnalysisSession";
 import { splitUci } from "@/lib/chess/uci";
+import { countMistakes } from "@/lib/analysis/mistakeCounts";
 import { buildBoardAnnotations } from "@/lib/tutor/boardAnnotations";
 import { buildEngineBrief } from "@/lib/tutor/engineBrief";
 import type { Game, MoveAnalysis, Position, UserColor } from "@/types";
@@ -26,6 +30,7 @@ type GameReviewProps = {
 
 export function GameReview({ game, positions, analyses }: GameReviewProps) {
   const [gameState, setGameState] = useState(game);
+  const { boardTheme } = useTheme();
 
   const {
     anchorPly,
@@ -56,6 +61,10 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
   const barEval = displayableEval(board, liveEngineEval);
 
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const mistakeCounts = useMemo(() => countMistakes(analyses), [analyses]);
+  const lastPly = positions[positions.length - 1]?.ply ?? 0;
+  const moveCount = positions.filter((p) => p.move_san).length;
 
   const suggestionAnnotations = useMemo((): BoardAnnotations | null => {
     if (!showSuggestions) return null;
@@ -159,107 +168,125 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
     }
   }
 
+  const topColor: "white" | "black" = boardOrientation === "white" ? "black" : "white";
+  const bottomColor: "white" | "black" = boardOrientation === "white" ? "white" : "black";
+  const nameFor = (color: "white" | "black") =>
+    color === "white" ? (gameState.white_player ?? "White") : (gameState.black_player ?? "Black");
+
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col overflow-hidden">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-4 sm:px-6">
+    <div className="flex min-h-[calc(100vh-3rem)] flex-col overflow-hidden bg-[var(--bg)]">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-2 sm:px-6">
         <div>
-          <h1 className="text-base font-medium text-[var(--text)]">
-            {gameState.white_player ?? "White"} vs{" "}
+          <h1 className="text-sm font-semibold tracking-tight text-[var(--text)]">
+            {gameState.white_player ?? "White"}{" "}
+            <span className="font-normal text-[var(--accent)]">vs</span>{" "}
             {gameState.black_player ?? "Black"}
           </h1>
-          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
-            {gameState.result ?? "—"}
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+            {gameState.result ?? "—"} · {moveCount} moves
           </p>
         </div>
-        <UserColorBadge game={gameState} onColorSet={handleColorSet} />
+        <div className="flex flex-wrap items-center gap-4">
+          {[
+            { label: "Blunders", n: mistakeCounts.blunders, color: "#f87171" },
+            { label: "Mistakes", n: mistakeCounts.mistakes, color: "#fb923c" },
+            { label: "Inaccuracies", n: mistakeCounts.inaccuracies, color: "#fbbf24" },
+          ].map(({ label, n, color }) => (
+            <div key={label} className="text-center">
+              <div className="text-[0.6rem] uppercase tracking-wider text-[var(--text-muted)]">
+                {label}
+              </div>
+              <div className="font-mono text-sm font-bold" style={{ color }}>
+                {n}
+              </div>
+            </div>
+          ))}
+          <UserColorBadge game={gameState} onColorSet={handleColorSet} />
+        </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-b border-[var(--border)] p-4 lg:border-b-0 lg:border-r">
-          <div>
-            <h2 className="text-xs font-medium uppercase tracking-wide text-[var(--text-subtle)]">
-              Moves
-            </h2>
-            <div className="mt-3">
-              <MoveList
-                positions={positions}
-                analyses={analyses}
-                selectedPly={anchorPly}
-                onSelectPly={handleSelectPly}
-                showMistakes
-              />
-            </div>
+      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[252px_minmax(0,1fr)_288px]">
+        <aside className="flex min-h-0 flex-col gap-1 overflow-y-auto border-b border-[var(--border)] bg-[var(--bg)] p-3 lg:border-b-0 lg:border-r">
+          <div className="px-1 pb-1">
+            <SectionLabel>Moves</SectionLabel>
           </div>
+          <MoveList
+            positions={positions}
+            analyses={analyses}
+            selectedPly={anchorPly}
+            onSelectPly={handleSelectPly}
+            showMistakes
+          />
+        </aside>
+
+        <section className="flex min-h-0 flex-col items-center gap-2 overflow-y-auto p-6 lg:p-8">
+          <div className="w-full max-w-[500px]">
+            <PlayerStrip
+              name={nameFor(topColor)}
+              color={topColor}
+              isUser={gameState.user_color === topColor}
+              result={resultForColor(gameState.result, topColor)}
+            />
+          </div>
+
+          <div className="w-full max-w-[500px]">
+            <ChessBoardWithEval
+              fen={board.fen}
+              orientation={boardOrientation}
+              interactive={analysisMode}
+              onMove={handleBoardMove}
+              evalWhite={displayEvalWhite}
+              scoreType={displayScoreType}
+              evalStatus={barEval.status}
+              annotations={boardAnnotations}
+              boardTheme={boardTheme}
+            />
+          </div>
+
+          <div className="w-full max-w-[500px]">
+            <PlayerStrip
+              name={nameFor(bottomColor)}
+              color={bottomColor}
+              isUser={gameState.user_color === bottomColor}
+              result={resultForColor(gameState.result, bottomColor)}
+            />
+          </div>
+
+          <p className="mt-1 font-mono text-xs tracking-wide text-[var(--text-muted)]">
+            {viewState.label}
+          </p>
+
+          {analysisMode && viewState.line.nodes.length > 1 && (
+            <AnalysisLineMoves line={viewState.line} onSelectIndex={goToLineIndex} />
+          )}
+
+          <Toolbar
+            canStepBack={viewState.canStepBack}
+            canStepForward={viewState.canStepForward}
+            ply={anchorPly}
+            lastPly={lastPly}
+            onJumpStart={() => handleSelectPly(0)}
+            onJumpEnd={() => handleSelectPly(lastPly)}
+            onStepBack={stepBack}
+            onStepForward={stepForward}
+            showSuggestions={showSuggestions}
+            onToggleSuggestions={() => setShowSuggestions((v) => !v)}
+            analysisMode={analysisMode}
+            onToggleAnalysisMode={toggleAnalysisMode}
+            onResetLine={resetToGame}
+          />
+        </section>
+
+        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-[var(--border)] bg-[var(--bg)] p-4 lg:border-l lg:border-t-0">
           <EngineMovesPanel
             analysis={selectedAnalysis}
             analyses={analyses}
             userColor={gameState.user_color}
             analysisMode={analysisMode}
             liveEval={liveEngineEval}
+            mistakeCounts={mistakeCounts}
           />
         </aside>
-
-        <section className="flex min-h-0 flex-col items-center gap-5 overflow-y-auto p-6 lg:p-10">
-          <ChessBoardWithEval
-            fen={board.fen}
-            orientation={boardOrientation}
-            interactive={analysisMode}
-            onMove={handleBoardMove}
-            evalWhite={displayEvalWhite}
-            scoreType={displayScoreType}
-            evalStatus={barEval.status}
-            annotations={boardAnnotations}
-          />
-
-          <p className="text-sm text-[var(--text-muted)]">{viewState.label}</p>
-
-          {analysisMode && viewState.line.nodes.length > 1 && (
-            <AnalysisLineMoves
-              line={viewState.line}
-              onSelectIndex={goToLineIndex}
-            />
-          )}
-
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <NavButton
-              label="←"
-              disabled={!viewState.canStepBack}
-              onClick={stepBack}
-            />
-            <NavButton
-              label="→"
-              disabled={!viewState.canStepForward}
-              onClick={stepForward}
-            />
-            <button
-              type="button"
-              onClick={() => setShowSuggestions((v) => !v)}
-              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                showSuggestions
-                  ? "border-green-700 bg-green-700/10 text-green-500"
-                  : "border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
-              }`}
-            >
-              {showSuggestions ? "Hide suggestions" : "Show suggestions"}
-            </button>
-            {analysisMode && (
-              <button
-                type="button"
-                onClick={resetToGame}
-                className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
-              >
-                Reset line
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={toggleAnalysisMode}
-              className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-hover)]"
-            >
-              {analysisMode ? "Exit analysis" : "Analyze position"}
-            </button>
-          </div>
-        </section>
       </div>
 
       {process.env.NODE_ENV === "development" && (
@@ -274,23 +301,120 @@ export function GameReview({ game, positions, analyses }: GameReviewProps) {
   );
 }
 
-function NavButton({
-  label,
-  disabled,
-  onClick,
+function Toolbar({
+  canStepBack,
+  canStepForward,
+  ply,
+  lastPly,
+  onJumpStart,
+  onJumpEnd,
+  onStepBack,
+  onStepForward,
+  showSuggestions,
+  onToggleSuggestions,
+  analysisMode,
+  onToggleAnalysisMode,
+  onResetLine,
 }: {
-  label: string;
-  disabled: boolean;
+  canStepBack: boolean;
+  canStepForward: boolean;
+  ply: number;
+  lastPly: number;
+  onJumpStart: () => void;
+  onJumpEnd: () => void;
+  onStepBack: () => void;
+  onStepForward: () => void;
+  showSuggestions: boolean;
+  onToggleSuggestions: () => void;
+  analysisMode: boolean;
+  onToggleAnalysisMode: () => void;
+  onResetLine: () => void;
+}) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-2">
+      <ToolbarIconButton title="Jump to start" onClick={onJumpStart} disabled={!canStepBack}>
+        <svg width="15" height="13" viewBox="0 0 15 13">
+          <rect x="0" y="0" width="2.5" height="13" fill="currentColor" />
+          <polygon points="15,0 15,13 3.5,6.5" fill="currentColor" />
+        </svg>
+      </ToolbarIconButton>
+      <ToolbarIconButton title="Previous (←)" onClick={onStepBack} disabled={!canStepBack}>
+        <svg width="13" height="13" viewBox="0 0 13 13">
+          <polygon points="13,0 13,13 0,6.5" fill="currentColor" />
+        </svg>
+      </ToolbarIconButton>
+
+      <div className="min-w-[64px] text-center font-mono text-sm font-bold text-[var(--text)]">
+        {ply === 0 ? "Start" : `${ply} / ${lastPly}`}
+      </div>
+
+      <ToolbarIconButton title="Next (→)" onClick={onStepForward} disabled={!canStepForward}>
+        <svg width="13" height="13" viewBox="0 0 13 13">
+          <polygon points="0,0 0,13 13,6.5" fill="currentColor" />
+        </svg>
+      </ToolbarIconButton>
+      <ToolbarIconButton title="Jump to end" onClick={onJumpEnd} disabled={!canStepForward}>
+        <svg width="15" height="13" viewBox="0 0 15 13">
+          <polygon points="0,0 0,13 11.5,6.5" fill="currentColor" />
+          <rect x="12.5" y="0" width="2.5" height="13" fill="currentColor" />
+        </svg>
+      </ToolbarIconButton>
+
+      <div className="mx-1 h-5 w-px bg-[var(--border)]" />
+
+      {analysisMode && (
+        <button
+          type="button"
+          onClick={onResetLine}
+          className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-muted)] transition hover:bg-[var(--surface-hover)]"
+        >
+          Reset line
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={onToggleSuggestions}
+        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+          showSuggestions
+            ? "border-[color-mix(in_srgb,var(--accent)_35%,transparent)] bg-[var(--accent-muted)] text-[var(--accent)]"
+            : "border-[var(--border)] bg-[var(--surface-raised)] text-[var(--text)]"
+        }`}
+      >
+        {showSuggestions ? "✓ Suggestions on" : "Show suggestions"}
+      </button>
+
+      <button
+        type="button"
+        onClick={onToggleAnalysisMode}
+        className="rounded-lg border border-transparent bg-[var(--accent)] px-3.5 py-1.5 text-xs font-semibold text-[var(--accent-fg)] transition hover:opacity-90"
+      >
+        {analysisMode ? "Exit analysis" : "Analyze position"}
+      </button>
+    </div>
+  );
+}
+
+function ToolbarIconButton({
+  title,
+  onClick,
+  disabled,
+  children,
+}: {
+  title: string;
   onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      disabled={disabled}
+      title={title}
       onClick={onClick}
-      className="min-w-[3rem] rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-hover)] disabled:opacity-30"
+      disabled={disabled}
+      className="flex h-9 w-10 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface-raised)] text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-30"
     >
-      {label}
+      {children}
     </button>
   );
 }

@@ -4,10 +4,19 @@ import type { MoveAnalysis, UserColor } from "@/types";
 import type { LiveEngineEval } from "@/types/engineEval";
 import { resolveReviewFocus } from "@/lib/analysis/perspective";
 import { formatEvalLabel } from "@/lib/chess/evalBar";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import type { MistakeCounts } from "@/lib/analysis/mistakeCounts";
 
 function formatEval(value: number | null, scoreType?: "cp" | "mate" | null) {
   if (value === null) return "—";
   return formatEvalLabel(value, scoreType ?? "cp");
+}
+
+function evalColor(value: number | null) {
+  if (value === null) return "var(--text)";
+  if (value > 0.15) return "#4ade80";
+  if (value < -0.15) return "#f87171";
+  return "#fbbf24";
 }
 
 type EngineMovesPanelProps = {
@@ -16,6 +25,7 @@ type EngineMovesPanelProps = {
   userColor: UserColor | null;
   analysisMode?: boolean;
   liveEval?: LiveEngineEval;
+  mistakeCounts: MistakeCounts;
 };
 
 export function EngineMovesPanel({
@@ -24,73 +34,76 @@ export function EngineMovesPanel({
   userColor,
   analysisMode = false,
   liveEval,
+  mistakeCounts,
 }: EngineMovesPanelProps) {
-  if (analysisMode && liveEval) {
-    return <LivePanel liveEval={liveEval} />;
-  }
+  return (
+    <>
+      {analysisMode && liveEval ? (
+        <LivePanel liveEval={liveEval} />
+      ) : (
+        <CachedPanel analysis={analysis} analyses={analyses} userColor={userColor} />
+      )}
+      <GameSummary counts={mistakeCounts} />
+    </>
+  );
+}
 
-  return <CachedPanel analysis={analysis} analyses={analyses} userColor={userColor} />;
+function PanelCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3.5">
+      {children}
+    </div>
+  );
 }
 
 function LivePanel({ liveEval }: { liveEval: LiveEngineEval }) {
   const isReady = liveEval.status === "ready";
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-      <h3 className="text-sm font-medium text-[var(--text)]">Engine recommendations</h3>
-
-      {!isReady ? (
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          {liveEval.status === "loading" ? "Evaluating position…" : "No engine data."}
-        </p>
-      ) : (
-        <div className="mt-4 space-y-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--text-subtle)]">Best move</p>
-            <p className="mt-1 font-mono text-lg text-[var(--text)]">
-              {liveEval.bestMoveSan ?? "—"}
+    <div>
+      <SectionLabel>Engine Analysis</SectionLabel>
+      <div className="mt-2.5">
+        <PanelCard>
+          {!isReady ? (
+            <p className="text-sm text-[var(--text-muted)]">
+              {liveEval.status === "loading" ? "Evaluating position…" : "No engine data."}
             </p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--text-subtle)]">Principal line</p>
-            <p className="mt-1 font-mono text-sm text-[var(--text-muted)]">
-              {liveEval.engineLine.length > 0
-                ? liveEval.engineLine.map((m) => m.san).join(" ")
-                : "—"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--text-subtle)]">Candidates</p>
-            <ul className="mt-2 space-y-2">
-              {liveEval.candidateMoves.length === 0 ? (
-                <li className="text-sm text-[var(--text-muted)]">None</li>
-              ) : (
-                liveEval.candidateMoves.map((c) => (
-                  <li
-                    key={c.uci ?? c.san}
-                    className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2"
-                  >
-                    <span className="font-mono text-sm text-[var(--text)]">{c.san ?? c.uci}</span>
-                    <span className="text-xs text-[var(--text-subtle)]">
-                      {formatEval(c.score, c.scoreType)}
-                    </span>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-xs text-[var(--text-subtle)]">Eval (White)</p>
-            <p className="font-mono text-sm text-[var(--text)]">
-              {formatEval(liveEval.evalWhite, liveEval.scoreType)}
-            </p>
-          </div>
-        </div>
-      )}
-    </section>
+          ) : (
+            <div className="space-y-3">
+              <Row label="Best move">
+                <span className="font-mono text-lg text-[var(--text)]">
+                  {liveEval.bestMoveSan ?? "—"}
+                </span>
+              </Row>
+              <Row label="Principal line">
+                <span className="font-mono text-sm leading-relaxed text-[var(--text-muted)]">
+                  {liveEval.engineLine.length > 0
+                    ? liveEval.engineLine.map((m) => m.san).join(" ")
+                    : "—"}
+                </span>
+              </Row>
+              <div>
+                <p className="text-[0.6rem] uppercase tracking-wider text-[var(--text-muted)]">
+                  Candidates
+                </p>
+                <CandidateList
+                  candidates={liveEval.candidateMoves}
+                  formatEval={formatEval}
+                />
+              </div>
+              <Row label="Eval (White)">
+                <span
+                  className="font-mono text-sm font-bold"
+                  style={{ color: evalColor(liveEval.evalWhite) }}
+                >
+                  {formatEval(liveEval.evalWhite, liveEval.scoreType)}
+                </span>
+              </Row>
+            </div>
+          )}
+        </PanelCard>
+      </div>
+    </div>
   );
 }
 
@@ -108,74 +121,133 @@ function CachedPanel({
 
   if (!analysis || !detail) {
     return (
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-        <h3 className="text-sm font-medium text-[var(--text)]">Engine recommendations</h3>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Select a move to see the engine&apos;s best lines and candidates.
-        </p>
-      </section>
+      <div>
+        <SectionLabel>Engine Analysis</SectionLabel>
+        <div className="mt-2.5">
+          <PanelCard>
+            <p className="text-sm text-[var(--text-muted)]">
+              Select a move to see the engine&apos;s best lines and candidates.
+            </p>
+          </PanelCard>
+        </div>
+      </div>
     );
   }
 
   const isOpportunity = focus?.usesReplyContext ?? false;
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-      <h3 className="text-sm font-medium text-[var(--text)]">Engine recommendations</h3>
-      {isOpportunity && (
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          After opponent&apos;s{" "}
-          <span className="font-mono">{analysis.move_played_san}</span>, best ways to punish:
-        </p>
-      )}
+    <div>
+      <SectionLabel>Engine Analysis</SectionLabel>
+      <div className="mt-2.5">
+        <PanelCard>
+          {isOpportunity && (
+            <p className="mb-3 text-sm text-[var(--text-muted)]">
+              After opponent&apos;s{" "}
+              <span className="font-mono text-[var(--text)]">{analysis.move_played_san}</span>,
+              best ways to punish:
+            </p>
+          )}
 
-      <div className="mt-4 space-y-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[var(--text-subtle)]">Best move</p>
-          <p className="mt-1 font-mono text-lg text-[var(--text)]">
-            {detail.best_move_san ?? "—"}
-          </p>
-        </div>
+          <div className="space-y-3">
+            <Row label="Best move">
+              <span className="font-mono text-lg text-[var(--text)]">
+                {detail.best_move_san ?? "—"}
+              </span>
+            </Row>
 
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[var(--text-subtle)]">Principal line</p>
-          <p className="mt-1 font-mono text-sm text-[var(--text-muted)]">
-            {detail.engine_line.map((m) => m.san).join(" ") || "—"}
-          </p>
-        </div>
+            <Row label="Principal line">
+              <span className="font-mono text-sm leading-relaxed text-[var(--text-muted)]">
+                {detail.engine_line.map((m) => m.san).join(" ") || "—"}
+              </span>
+            </Row>
 
-        <div>
-          <p className="text-xs uppercase tracking-wide text-[var(--text-subtle)]">Candidates</p>
-          <ul className="mt-2 space-y-2">
-            {detail.candidate_moves.length === 0 ? (
-              <li className="text-sm text-[var(--text-muted)]">None cached</li>
-            ) : (
-              detail.candidate_moves.map((c) => (
-                <li
-                  key={c.uci ?? c.san}
-                  className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2"
-                >
-                  <span className="font-mono text-sm text-[var(--text)]">{c.san ?? c.uci}</span>
-                  <span className="text-xs text-[var(--text-subtle)]">
-                    {formatEval(c.score, c.scoreType)}
-                  </span>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+            <div>
+              <p className="text-[0.6rem] uppercase tracking-wider text-[var(--text-muted)]">
+                Candidates
+              </p>
+              <CandidateList candidates={detail.candidate_moves} formatEval={formatEval} />
+            </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="text-xs text-[var(--text-subtle)]">Eval before</p>
-            <p className="font-mono text-[var(--text)]">{formatEval(analysis.eval_before)}</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-[0.6rem] uppercase tracking-wider text-[var(--text-muted)]">
+                  Eval before
+                </p>
+                <p className="font-mono text-[var(--text)]">{formatEval(analysis.eval_before)}</p>
+              </div>
+              <div>
+                <p className="text-[0.6rem] uppercase tracking-wider text-[var(--text-muted)]">
+                  Eval after
+                </p>
+                <p className="font-mono text-[var(--text)]">{formatEval(analysis.eval_after)}</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-[var(--text-subtle)]">Eval after</p>
-            <p className="font-mono text-[var(--text)]">{formatEval(analysis.eval_after)}</p>
-          </div>
-        </div>
+        </PanelCard>
       </div>
-    </section>
+    </div>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[0.6rem] uppercase tracking-wider text-[var(--text-muted)]">{label}</p>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function CandidateList({
+  candidates,
+  formatEval,
+}: {
+  candidates: { uci: string | null; san: string | null; score: number | null; scoreType?: "cp" | "mate" | null }[];
+  formatEval: (value: number | null, scoreType?: "cp" | "mate" | null) => string;
+}) {
+  if (candidates.length === 0) {
+    return <p className="mt-2 text-sm text-[var(--text-muted)]">None</p>;
+  }
+  return (
+    <ul className="mt-2 space-y-1.5">
+      {candidates.map((c) => (
+        <li
+          key={c.uci ?? c.san}
+          className="flex items-center justify-between rounded-md border border-[var(--border)] px-2.5 py-1.5"
+        >
+          <span className="font-mono text-sm text-[var(--text)]">{c.san ?? c.uci}</span>
+          <span className="text-xs text-[var(--text-subtle)]">
+            {formatEval(c.score, c.scoreType)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function GameSummary({ counts }: { counts: MistakeCounts }) {
+  const rows = [
+    { label: "Blunders", n: counts.blunders, color: "#f87171" },
+    { label: "Mistakes", n: counts.mistakes, color: "#fb923c" },
+    { label: "Inaccuracies", n: counts.inaccuracies, color: "#fbbf24" },
+  ];
+  return (
+    <div className="mt-auto border-t border-[var(--border)] pt-3.5">
+      <SectionLabel>Game Summary</SectionLabel>
+      <div className="mt-2.5 flex flex-col gap-1.5">
+        {rows.map(({ label, n, color }) => (
+          <div key={label} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+              <span className="text-sm text-[var(--text-muted)]">{label}</span>
+            </div>
+            <span className="font-mono text-sm font-bold" style={{ color }}>
+              {n}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

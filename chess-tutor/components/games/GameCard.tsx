@@ -24,11 +24,11 @@ export function GameCard({ game }: GameCardProps) {
   return (
     <Link
       href={`/games/${game.id}`}
-      className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--text-subtle)] hover:shadow-sm"
+      className="block rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--border-strong)]"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 className="font-semibold text-[var(--text)]">{formatPlayers(game)}</h2>
-        <span className="rounded-full bg-[var(--surface-hover)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
+        <span className="rounded-full bg-[var(--surface-raised)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
           {game.source === "chess_com" ? "Chess.com" : "PGN"}
         </span>
       </div>

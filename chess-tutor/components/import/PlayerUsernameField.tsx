@@ -36,7 +36,7 @@ export function PlayerUsernameField({
 
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-medium text-stone-700">
+      <label htmlFor={id} className="text-sm font-medium text-[var(--text)]">
         Your Chess.com username or PGN name
       </label>
       <input
@@ -45,9 +45,9 @@ export function PlayerUsernameField({
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="e.g. bloodbro23"
-        className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+        className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)]"
       />
-      <p className="mt-1 text-xs text-stone-500">{hint}</p>
+      <p className="mt-1 text-xs text-[var(--text-muted)]">{hint}</p>
     </div>
   );
 }

@@ -14,6 +14,7 @@ type ChessBoardWithEvalProps = {
   evalWhite: number | null;
   scoreType?: "cp" | "mate" | null;
   evalStatus?: EngineEvalStatus;
+  boardTheme?: { light: string; dark: string };
 };
 
 export function ChessBoardWithEval({
@@ -25,7 +26,7 @@ export function ChessBoardWithEval({
   ...boardProps
 }: ChessBoardWithEvalProps) {
   return (
-    <div className="flex w-full max-w-[min(680px,92vmin)] items-stretch overflow-hidden border border-[var(--border)]">
+    <div className="flex w-full max-w-[min(680px,92vmin)] items-stretch overflow-hidden rounded-lg shadow-[0_24px_64px_rgba(0,0,0,0.35)] ring-1 ring-[var(--border)]">
       <EvalBar
         evalWhite={evalWhite}
         scoreType={scoreType}

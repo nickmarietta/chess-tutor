@@ -8,52 +8,98 @@ import {
   useState,
   type ReactNode,
 } from "react";
-
-export type Theme = "light" | "dark";
+import {
+  DEFAULT_ACCENT_ID,
+  DEFAULT_BOARD_THEME_ID,
+  findAccent,
+  findBoardTheme,
+  type BoardTheme,
+  type ColorSchemeId,
+  type UiAccent,
+} from "@/lib/theme/palette";
 
 type ThemeContextValue = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
+  scheme: ColorSchemeId;
+  setScheme: (scheme: ColorSchemeId) => void;
+  accentId: string;
+  setAccentId: (id: string) => void;
+  accent: UiAccent;
+  boardThemeId: string;
+  setBoardThemeId: (id: string) => void;
+  boardTheme: BoardTheme;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "chess-tutor-theme";
+const SCHEME_KEY = "chess-tutor-theme";
+const ACCENT_KEY = "chess-tutor-accent";
+const BOARD_THEME_KEY = "chess-tutor-board-theme";
 
-function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-  document.documentElement.style.colorScheme = theme;
+function applyScheme(scheme: ColorSchemeId) {
+  document.documentElement.setAttribute("data-scheme", scheme);
+  document.documentElement.classList.toggle("dark", scheme !== "light");
+  document.documentElement.style.colorScheme = scheme === "light" ? "light" : "dark";
+}
+
+function applyAccent(hex: string) {
+  document.documentElement.style.setProperty("--accent", hex);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [scheme, setSchemeState] = useState<ColorSchemeId>("dark");
+  const [accentId, setAccentIdState] = useState(DEFAULT_ACCENT_ID);
+  const [boardThemeId, setBoardThemeIdState] = useState(DEFAULT_BOARD_THEME_ID);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const storedScheme = localStorage.getItem(SCHEME_KEY) as ColorSchemeId | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = stored ?? (prefersDark ? "dark" : "light");
-    setThemeState(initial);
-    applyTheme(initial);
+    const initialScheme: ColorSchemeId =
+      storedScheme === "dark" || storedScheme === "light" || storedScheme === "oled"
+        ? storedScheme
+        : prefersDark
+          ? "dark"
+          : "light";
+    setSchemeState(initialScheme);
+    applyScheme(initialScheme);
+
+    const storedAccent = localStorage.getItem(ACCENT_KEY) ?? DEFAULT_ACCENT_ID;
+    setAccentIdState(storedAccent);
+    applyAccent(findAccent(storedAccent).hex);
+
+    const storedBoardTheme = localStorage.getItem(BOARD_THEME_KEY) ?? DEFAULT_BOARD_THEME_ID;
+    setBoardThemeIdState(storedBoardTheme);
   }, []);
 
-  const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
-    localStorage.setItem(STORAGE_KEY, next);
-    applyTheme(next);
+  const setScheme = useCallback((next: ColorSchemeId) => {
+    setSchemeState(next);
+    localStorage.setItem(SCHEME_KEY, next);
+    applyScheme(next);
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    setThemeState((current) => {
-      const next = current === "light" ? "dark" : "light";
-      localStorage.setItem(STORAGE_KEY, next);
-      applyTheme(next);
-      return next;
-    });
+  const setAccentId = useCallback((id: string) => {
+    setAccentIdState(id);
+    localStorage.setItem(ACCENT_KEY, id);
+    applyAccent(findAccent(id).hex);
+  }, []);
+
+  const setBoardThemeId = useCallback((id: string) => {
+    setBoardThemeIdState(id);
+    localStorage.setItem(BOARD_THEME_KEY, id);
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{
+        scheme,
+        setScheme,
+        accentId,
+        setAccentId,
+        accent: findAccent(accentId),
+        boardThemeId,
+        setBoardThemeId,
+        boardTheme: findBoardTheme(boardThemeId),
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

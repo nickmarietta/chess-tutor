@@ -26,7 +26,7 @@ export default async function GamesPage() {
         </div>
         <Link
           href="/import"
-          className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+          className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-fg)] transition hover:opacity-90"
         >
           Import game
         </Link>
