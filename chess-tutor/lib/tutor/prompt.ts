@@ -50,6 +50,10 @@ export function buildExplainPrompt(brief: EngineBrief): string {
     "Here are the ONLY facts you may reference. Do not invent, guess, or reference any other move, square, piece, or evaluation number beyond these:",
     facts,
     "",
-    "Write a short, natural explanation (2-4 sentences) in a warm, direct coaching tone, using only the facts above. If a best move or evaluation isn't listed above, do not speculate about what it might be — talk instead about the kind of problem the move has.",
+    "Write a short, natural explanation (3-6 sentences) in a warm, direct coaching tone. Follow these requirements exactly — a vague or generic explanation is a failure:",
+    '- If "Move played" is given, name that move explicitly in your first sentence.',
+    '- If "Problems with this move" lists more than one problem, address EACH one specifically by name — do not collapse them into one vague sentence like "you missed a tactic". Say which of the listed problems applied.',
+    '- If "Best move" is given, name it explicitly and say plainly that it was the better choice. Never gesture at "a better move" or "another option" without naming it.',
+    "- Use only the facts above. Never invent a different move, square, piece, or number, and never explain the specific tactical or positional reason a move is bad or good beyond what these facts state — you don't have access to the board.",
   ].join("\n");
 }

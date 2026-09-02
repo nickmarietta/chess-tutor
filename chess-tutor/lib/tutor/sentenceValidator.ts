@@ -56,22 +56,36 @@ function allowedEvalNumbers(brief: EngineBrief): number[] {
 }
 
 /**
+ * A bare square token (e.g. "e4") is only unambiguously a location
+ * reference — not a move claim — when the surrounding words say so: "on e4",
+ * "at e4", or "e4 square". Without that signal it's treated as a move claim
+ * like any other, because in practice an LLM will also use the bare-square
+ * shape to state a move directly ("the move played was e4", "d3 instead of
+ * e4 would have won") — and that claim must be held to the same standard as
+ * "Nf6" or "Qxd5+". Erring toward validating too much here is deliberate:
+ * a false rejection just triggers the deterministic fallback, but a false
+ * exemption lets an unverified move claim reach the user unchallenged.
+ */
+function isSquareReference(sentence: string, index: number, token: string): boolean {
+  const before = sentence.slice(0, index);
+  const after = sentence.slice(index + token.length);
+  return /\b(?:on|at)\s*$/i.test(before) || /^\s*square\b/i.test(after);
+}
+
+/**
  * The trust boundary: a sentence may only claim a move or eval number that
  * is present in the (already help_mode-redacted) brief. Nothing else about
  * the position may be asserted, since the LLM never sees the board — only
  * the brief's facts, and it must not exceed them.
- *
- * A bare square token (e.g. "e4") is deliberately exempt from move
- * validation — in prose it's overwhelmingly a square reference ("the e4
- * square"), and SAN gives it the exact same shape as a pawn push, so it
- * can't be reliably disambiguated. Only tokens with a piece letter,
- * capture, check/mate, castling, or promotion are unambiguous move claims.
  */
 export function validateSentence(sentence: string, brief: EngineBrief): boolean {
   const sans = allowedSans(brief);
 
-  for (const token of sentence.match(SAN_TOKEN) ?? []) {
-    if (BARE_SQUARE.test(token)) continue;
+  for (const match of sentence.matchAll(SAN_TOKEN)) {
+    const token = match[0];
+    if (BARE_SQUARE.test(token) && isSquareReference(sentence, match.index, token)) {
+      continue;
+    }
     if (!sans.has(token)) return false;
   }
 
