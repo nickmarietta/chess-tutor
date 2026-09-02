@@ -47,3 +47,9 @@ export function buildEngineBrief(analysis: MoveAnalysis): EngineBrief {
     isCritical: analysis.is_critical,
   };
 }
+
+/** Shared eval formatting for anything rendering a brief's eval fields as text. */
+export function formatEval(value: number | null): string | null {
+  if (value === null) return null;
+  return `${value > 0 ? "+" : ""}${value.toFixed(2)}`;
+}
