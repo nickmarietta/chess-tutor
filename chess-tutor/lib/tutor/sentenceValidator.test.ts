@@ -80,12 +80,33 @@ describe("validateSentence", () => {
     ).toBe(true);
   });
 
-  it("allows a bare square reference even when it coincides with an unrelated pawn push", () => {
-    // "e4" is not one of the brief's known moves at all here, but as a bare
-    // square token it must still be allowed through — this is the documented
-    // trap: a bare [a-h][1-8] token is ambiguous with a pawn move in SAN, and
-    // the design choice is to always treat it as a square reference.
+  it("allows a bare square reference when 'on' signals it's a location, not a move", () => {
+    // "e4" is not one of the brief's known moves at all here, but "strong on
+    // e4" is unambiguously a location reference, not a move claim.
     expect(validateSentence("White is strong on e4.", BRIEF)).toBe(true);
+  });
+
+  it("rejects a bare-square token used as an actual move claim, with no location signal", () => {
+    // Regression: observed in production. hint-level briefs redact every
+    // move field to null, yet the model fabricated "the move played was e4"
+    // and "d3 instead" — bare pawn-push shapes with no "on"/"at"/"square"
+    // nearby, so they must be held to the same standard as "Nf6" and
+    // rejected, not waved through as square references.
+    const hintBrief: EngineBrief = {
+      ...BRIEF,
+      movePlayedSan: null,
+      bestMoveSan: null,
+      candidateMoves: [],
+    };
+    expect(validateSentence("The move played was e4.", hintBrief)).toBe(false);
+    expect(validateSentence("Moving d3 instead of e4 would have been better.", hintBrief)).toBe(
+      false,
+    );
+  });
+
+  it("still allows a legitimate bare pawn-push move claim that matches the brief", () => {
+    const pawnBrief: EngineBrief = { ...BRIEF, movePlayedSan: "e4", candidateMoves: [] };
+    expect(validateSentence("You played e4.", pawnBrief)).toBe(true);
   });
 
   it("accepts an eval number that matches the brief", () => {
