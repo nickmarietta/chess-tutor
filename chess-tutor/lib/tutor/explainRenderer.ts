@@ -1,5 +1,5 @@
 import type { MistakeTag } from "@/types";
-import type { EngineBrief } from "./engineBrief";
+import { formatEval, type EngineBrief } from "./engineBrief";
 
 const MISTAKE_TAG_PHRASES: Record<MistakeTag, string> = {
   missed_tactic: "missed a tactical opportunity",
@@ -12,12 +12,6 @@ const MISTAKE_TAG_PHRASES: Record<MistakeTag, string> = {
   passive_defense: "retreated instead of finding an active defense",
   opening_principle_violation: "broke a basic opening principle",
 };
-
-function formatEval(value: number | null): string | null {
-  if (value === null) return null;
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}`;
-}
 
 function severityHeadline(brief: EngineBrief): string {
   const move = brief.movePlayedSan ?? "This move";

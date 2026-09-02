@@ -46,6 +46,18 @@ describe("POST /api/tutor", () => {
     expect(response.status).toBe(400);
   });
 
+  it("returns a 500 JSON error when loading move analyses fails, matching the other routes", async () => {
+    listMoveAnalyses.mockRejectedValue(new Error("Supabase is down"));
+
+    const response = await POST(
+      postRequest({ gameId: "g1", positionId: "p1", helpMode: "answer" }),
+    );
+
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.error).toBe("Supabase is down");
+  });
+
   it("returns 404 when no analysis exists for the position", async () => {
     listMoveAnalyses.mockResolvedValue([]);
 

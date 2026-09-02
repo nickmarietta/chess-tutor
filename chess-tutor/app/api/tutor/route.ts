@@ -35,7 +35,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const analyses = await listMoveAnalyses(gameId);
+  let analyses;
+  try {
+    analyses = await listMoveAnalyses(gameId);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load move analysis.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
   const analysis = analyses.find((a) => a.position_id === positionId);
   if (!analysis) {
     return NextResponse.json(

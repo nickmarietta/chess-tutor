@@ -1,9 +1,4 @@
-import type { EngineBrief } from "./engineBrief";
-
-function formatEval(value: number | null): string | null {
-  if (value === null) return null;
-  return `${value > 0 ? "+" : ""}${value.toFixed(2)}`;
-}
+import { formatEval, type EngineBrief } from "./engineBrief";
 
 function factLines(brief: EngineBrief): string[] {
   const lines: string[] = [`- Side to move: ${brief.sideToMove}`];
