@@ -10,11 +10,26 @@ type MoveListProps = {
   showMistakes?: boolean;
 };
 
-function severityDot(severity: MoveAnalysis["mistake_severity"]) {
-  if (severity === "blunder") return "bg-red-500";
-  if (severity === "mistake") return "bg-orange-500";
-  if (severity === "inaccuracy") return "bg-amber-500";
-  return null;
+const QUALITY: Record<
+  "inaccuracy" | "mistake" | "blunder",
+  { sym: string; color: string; bg: string; label: string }
+> = {
+  inaccuracy: { sym: "?!", color: "#fbbf24", bg: "rgba(251,191,36,0.15)", label: "Inaccuracy" },
+  mistake: { sym: "?", color: "#fb923c", bg: "rgba(251,146,60,0.15)", label: "Mistake" },
+  blunder: { sym: "??", color: "#f87171", bg: "rgba(248,113,113,0.15)", label: "Blunder" },
+};
+
+function QualityBadge({ severity }: { severity: MoveAnalysis["mistake_severity"] }) {
+  if (severity === "none") return null;
+  const q = QUALITY[severity];
+  return (
+    <span
+      className="inline-flex shrink-0 items-center rounded px-[5px] py-[1px] font-mono text-[0.58rem] font-bold leading-relaxed tracking-wide"
+      style={{ color: q.color, backgroundColor: q.bg }}
+    >
+      {q.sym}
+    </span>
+  );
 }
 
 export function MoveList({
@@ -28,28 +43,47 @@ export function MoveList({
   const analysisByPly = new Map(analyses.map((a) => [a.ply, a]));
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-1">
       <button
         type="button"
         onClick={() => onSelectPly(0)}
-        className={`rounded-lg px-3 py-2 text-left text-sm transition ${
+        className={`rounded-md px-3 py-1.5 text-left text-sm transition ${
           selectedPly === 0
-            ? "bg-[var(--accent-muted)] font-medium text-[var(--text)]"
+            ? "bg-[var(--accent-muted)] font-semibold text-[var(--accent)]"
             : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
         }`}
       >
-        Start
+        ▷ Start
       </button>
+
+      <div className="grid grid-cols-[24px_1fr_1fr] px-2 pb-0.5 text-[0.6rem] uppercase tracking-wider text-[var(--text-subtle)]">
+        <span>#</span>
+        <span>White</span>
+        <span>Black</span>
+      </div>
+
       <div className="max-h-[min(32rem,calc(100vh-14rem))] overflow-y-auto">
-        <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-1 text-sm">
+        <div className="flex flex-col gap-px">
           {Array.from({ length: Math.ceil(moves.length / 2) }, (_, i) => {
             const moveNumber = i + 1;
             const white = moves[i * 2];
             const black = moves[i * 2 + 1];
+            const rowSelected =
+              (white && selectedPly === white.ply) || (black && selectedPly === black.ply);
 
             return (
-              <div key={moveNumber} className="contents">
-                <span className="py-1.5 text-[var(--text-subtle)]">
+              <div
+                key={moveNumber}
+                className="grid grid-cols-[24px_1fr_1fr] items-center rounded-md"
+                style={{
+                  backgroundColor: rowSelected
+                    ? "var(--accent-muted)"
+                    : i % 2 === 1
+                      ? "var(--border-soft)"
+                      : "transparent",
+                }}
+              >
+                <span className="py-1 pl-2 font-mono text-[0.7rem] text-[var(--text-subtle)]">
                   {moveNumber}.
                 </span>
                 {white ? (
@@ -81,6 +115,30 @@ export function MoveList({
           })}
         </div>
       </div>
+
+      {showMistakes && (
+        <div className="mt-3 border-t border-[var(--border)] pt-3">
+          <div className="mb-2 text-[0.6rem] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+            Legend
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {(["blunder", "mistake", "inaccuracy"] as const).map((severity) => {
+              const q = QUALITY[severity];
+              return (
+                <div key={severity} className="flex items-center gap-2">
+                  <span
+                    className="w-5 font-mono text-[0.62rem] font-bold"
+                    style={{ color: q.color }}
+                  >
+                    {q.sym}
+                  </span>
+                  <span className="text-[0.7rem] text-[var(--text-muted)]">{q.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -101,20 +159,17 @@ function MoveCell({
   onSelect: (ply: number) => void;
 }) {
   const severity = analysis?.mistake_severity ?? "none";
-  const dot = showMistakes ? severityDot(severity) : null;
 
   return (
     <button
       type="button"
       onClick={() => onSelect(ply)}
-      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 font-mono text-left transition ${
-        selected
-          ? "bg-[var(--accent-muted)] text-[var(--text)]"
-          : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"
+      className={`flex items-center gap-1.5 rounded-md px-1.5 py-1 font-mono text-[0.78rem] transition ${
+        selected ? "font-semibold text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-[var(--text)]"
       }`}
     >
-      {dot && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />}
       <span>{label}</span>
+      {showMistakes && <QualityBadge severity={severity} />}
     </button>
   );
 }

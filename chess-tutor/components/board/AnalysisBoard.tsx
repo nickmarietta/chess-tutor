@@ -13,6 +13,7 @@ type AnalysisBoardProps = {
   annotations?: BoardAnnotations | null;
   interactive?: boolean;
   onMove?: (from: string, to: string) => boolean;
+  boardTheme?: { light: string; dark: string };
 };
 
 export function AnalysisBoard({
@@ -21,6 +22,7 @@ export function AnalysisBoard({
   annotations,
   interactive = true,
   onMove,
+  boardTheme,
 }: AnalysisBoardProps) {
   const squareStyles = annotationsToSquareStyles(annotations?.highlights);
   const arrows = annotationsToArrows(annotations?.arrows);
@@ -50,6 +52,12 @@ export function AnalysisBoard({
           boardStyle: {
             borderRadius: 0,
           },
+          ...(boardTheme
+            ? {
+                darkSquareStyle: { backgroundColor: boardTheme.dark },
+                lightSquareStyle: { backgroundColor: boardTheme.light },
+              }
+            : {}),
         }}
       />
     </div>
