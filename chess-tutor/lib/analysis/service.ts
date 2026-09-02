@@ -1,4 +1,5 @@
 import { Chess, type Square } from "chess.js";
+import { isAnalysisEnabled } from "@/lib/config/featureFlags";
 import { sideToMoveFromFen } from "@/lib/chess/moveAnnotations";
 import { sanToUci } from "@/lib/chess/uci";
 import { analyzePositionWithStockfish } from "@/lib/engine/stockfish";
@@ -345,6 +346,10 @@ export async function analyzeGameNow(gameId: string) {
   const data = await getGameById(gameId);
   if (!data) {
     throw new Error("Game not found.");
+  }
+
+  if (!isAnalysisEnabled()) {
+    return data;
   }
 
   const expectedMoves = Math.max(0, data.positions.length - 1);
